@@ -24,6 +24,7 @@ HTTPCACHE_ENABLED = True
 
 SPIDER_CONTRACTS = {
     "boatrace_crawler.contracts.CalendarContract": 10,
+    "boatrace_crawler.contracts.RaceIndexContract": 10,
 }
 
 # Set settings whose default value is deprecated to a future-proof value

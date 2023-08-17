@@ -1,12 +1,10 @@
-# Define here the models for your scraped items
-#
-# See documentation in:
-# https://docs.scrapy.org/en/latest/topics/items.html
-
-import scrapy
+from scrapy import Field, Item
 
 
-class BoatraceCrawlerItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+class RaceIndexItem(Item):
+    type = Field()
+    place_id = Field()
+    place_name = Field()
+    race_grade = Field()
+    race_name = Field()
+    race_index_urls = Field()

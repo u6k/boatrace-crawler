@@ -1,6 +1,9 @@
 from urllib.parse import parse_qs, urlparse
 
 import scrapy
+from scrapy.loader import ItemLoader
+
+from boatrace_crawler.items import RaceIndexItem
 
 
 class BoatraceSpider(scrapy.Spider):
@@ -37,6 +40,10 @@ class BoatraceSpider(scrapy.Spider):
             self.logger.debug("#_follow: follow race index page")
             return scrapy.Request(url, callback=self.parse_race_index, meta=meta)
 
+        elif url.startswith("https://www.boatrace.jp/owpc/pc/race/racelist?"):
+            self.logger.debug("#_follow: follow race program page")
+            return scrapy.Request(url, callback=self.parse_race_program, meta=meta)
+
         else:
             raise Exception("Unknown url")
 
@@ -64,6 +71,57 @@ class BoatraceSpider(scrapy.Spider):
     def parse_race_index(self, response):
         """Parse race index page.
 
-        @url https://www.boatrace.jp/owpc/pc/race/raceindex?jcd=01&hd=20230803
+        @url https://www.boatrace.jp/owpc/pc/race/raceindex?jcd=01&hd=20230731
+        @returns items 1 1
+        @returns requests 17
+        @race_index_contract
         """
         self.logger.info(f"#parse_race_index: start: response={response.url}")
+
+        # レースインデックスを構築する
+        loader = ItemLoader(item=RaceIndexItem(type="RaceIndexItem"), response=response)
+
+        race_index_url = urlparse(response.url)
+        race_index_qs = parse_qs(race_index_url.query)
+        loader.add_value("place_id", race_index_qs["jcd"][0])
+
+        loader.add_xpath("place_name", "//div[@class='heading2_area']/img/@alt")
+
+        loader.add_xpath("race_grade", "//div[@class='heading2_head']/div[2]/@class")
+
+        loader.add_xpath("race_name", "//h2[@class='heading2_titleName']/text()")
+
+        for a in response.xpath("//a[@class='tab2_inner']"):
+            loader.add_value("race_index_urls", response.urljoin(a.xpath("@href").get()))
+        loader.add_value("race_index_urls", response.url)
+
+        item = loader.load_item()
+
+        self.logger.debug(f"#parse_race_index: race_index={item}")
+        yield item
+
+        # 他の日をフォローする
+        for a in response.xpath("//a[@class='tab2_inner']"):
+            race_index_url = response.urljoin(a.xpath("@href").get())
+
+            self.logger.debug(f"#parse_race_index: a={race_index_url}")
+
+            yield self._follow(race_index_url)
+
+        # レースラウンドをフォローする
+        for a in response.xpath("//div[@class='table1']/table/tbody/tr/td[1]/a"):
+            race_program_url = urlparse(response.urljoin(a.xpath("@href").get()))
+            race_program_qs = parse_qs(race_program_url.query)
+
+            if race_program_url.path == "/owpc/pc/race/racelist" and "rno" in race_program_qs and "jcd" in race_program_qs and "hd" in race_program_qs:
+                self.logger.debug(f"#parse_race_index: a={race_program_url.geturl()}")
+
+                race_program_url = f"https://www.boatrace.jp/owpc/pc/race/racelist?rno={race_program_qs['rno'][0]}&jcd={race_program_qs['jcd'][0]}&hd={race_program_qs['hd'][0]}"
+                yield self._follow(race_program_url)
+
+    def parse_race_program(self, response):
+        """Parse race program page.
+
+        @url https://www.boatrace.jp/owpc/pc/race/racelist?rno=1&jcd=01&hd=20230817
+        """
+        self.logger.info(f"#parse_race_program: start: response={response.url}")
