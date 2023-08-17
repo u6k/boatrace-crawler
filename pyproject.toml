@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "boatrace-crawler"
+version = "0.1.0"
+description = "競艇データを収集する"
+authors = ["u6k <u6k.apps@gmail.com>"]
+license = "MIT License"
+readme = "README.md"
+packages = [{include = "boatrace_crawler"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
