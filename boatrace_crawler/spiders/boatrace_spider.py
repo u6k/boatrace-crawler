@@ -3,7 +3,7 @@ from urllib.parse import parse_qs, urlparse
 import scrapy
 from scrapy.loader import ItemLoader
 
-from boatrace_crawler.items import RaceIndexItem, RaceProgramBracketItem, RaceProgramBracketResultsItem, RaceProgramItem
+from boatrace_crawler.items import OddsItem, RaceIndexItem, RaceProgramBracketItem, RaceProgramBracketResultsItem, RaceProgramItem
 
 
 class BoatraceSpider(scrapy.Spider):
@@ -268,11 +268,44 @@ class BoatraceSpider(scrapy.Spider):
         """Parse odds 3t page.
 
         @url https://www.boatrace.jp/owpc/pc/race/odds3t?rno=5&jcd=01&hd=20230817
-        @returns items 0 0
+        @returns items 120 120
         @returns requests 0 0
         @odds_3t_contract
         """
         self.logger.info(f"#parse_odds_3t: start: response={response.url}")
+
+        if response.xpath("//h3[contains(@class, 'title12_title') and contains(text(), 'データはありません。')]"):
+            # データがない場合は処理を戻す
+            self.logger.debug("#parse_odds_3t: no data")
+            return
+
+        table = response.xpath("//div[@class='table1']/table")
+
+        for i in range(6):
+            bracket_number_1 = table.xpath(f"thead/tr/th[{i*2+1}]/text()").get()
+
+            for j in range(5):
+                bracket_number_2 = table.xpath(f"tbody/tr[{j*4+1}]/td[{i*3+1}]/text()").get()
+
+                for k in range(4):
+                    if k == 0:
+                        bracket_number_3 = table.xpath(f"tbody/tr[{j*4+k+1}]/td[{i*3+2}]/text()").get()
+                        odds = table.xpath(f"tbody/tr[{j*4+k+1}]/td[{i*3+3}]/text()").get()
+                    else:
+                        bracket_number_3 = table.xpath(f"tbody/tr[{j*4+k+1}]/td[{i*2+1}]/text()").get()
+                        odds = table.xpath(f"tbody/tr[{j*4+k+1}]/td[{i*2+2}]/text()").get()
+
+                    loader = ItemLoader(item=OddsItem(), selector=None)
+                    loader.add_value("url", response.url)
+                    loader.add_value("bracket_number_1", bracket_number_1)
+                    loader.add_value("bracket_number_2", bracket_number_2)
+                    loader.add_value("bracket_number_3", bracket_number_3)
+                    loader.add_value("odds", odds)
+
+                    item = loader.load_item()
+
+                    self.logger.debug(f"#parse_odds_3t: odds={item}")
+                    yield item
 
     def parse_odds_3f(self, response):
         """Parse odds 3f page.

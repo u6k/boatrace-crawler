@@ -37,3 +37,11 @@ class RaceProgramBracketResultsItem(Item):
     approach_course = Field()
     start_timing = Field()
     result = Field()
+
+
+class OddsItem(Item):
+    url = Field()
+    bracket_number_1 = Field()
+    bracket_number_2 = Field()
+    bracket_number_3 = Field()
+    odds = Field()

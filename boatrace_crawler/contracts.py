@@ -4,7 +4,7 @@ from scrapy.contracts import Contract
 from scrapy.exceptions import ContractFail
 from scrapy.http import Request
 
-from boatrace_crawler.items import RaceIndexItem, RaceProgramBracketItem, RaceProgramBracketResultsItem, RaceProgramItem
+from boatrace_crawler.items import OddsItem, RaceIndexItem, RaceProgramBracketItem, RaceProgramBracketResultsItem, RaceProgramItem
 
 
 class CalendarContract(Contract):
@@ -149,7 +149,47 @@ class Odds3tContract(Contract):
     name = "odds_3t_contract"
 
     def post_process(self, output):
-        pass
+        #
+        # Check items
+        #
+        items = list(filter(lambda o: isinstance(o, OddsItem), output))
+
+        assert len(items) == 120
+
+        i = items[0]
+        assert i["bracket_number_1"] == ["1"]
+        assert i["bracket_number_2"] == ["2"]
+        assert i["bracket_number_3"] == ["3"]
+        assert i["odds"] == ["11.2"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds3t?rno=5&jcd=01&hd=20230817"]
+
+        i = items[3]
+        assert i["bracket_number_1"] == ["1"]
+        assert i["bracket_number_2"] == ["2"]
+        assert i["bracket_number_3"] == ["6"]
+        assert i["odds"] == ["20.4"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds3t?rno=5&jcd=01&hd=20230817"]
+
+        i = items[4]
+        assert i["bracket_number_1"] == ["1"]
+        assert i["bracket_number_2"] == ["3"]
+        assert i["bracket_number_3"] == ["2"]
+        assert i["odds"] == ["16.8"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds3t?rno=5&jcd=01&hd=20230817"]
+
+        i = items[20]
+        assert i["bracket_number_1"] == ["2"]
+        assert i["bracket_number_2"] == ["1"]
+        assert i["bracket_number_3"] == ["3"]
+        assert i["odds"] == ["42.3"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds3t?rno=5&jcd=01&hd=20230817"]
+
+        i = items[119]
+        assert i["bracket_number_1"] == ["6"]
+        assert i["bracket_number_2"] == ["5"]
+        assert i["bracket_number_3"] == ["4"]
+        assert i["odds"] == ["641.9"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds3t?rno=5&jcd=01&hd=20230817"]
 
 
 class Odds3fContract(Contract):
