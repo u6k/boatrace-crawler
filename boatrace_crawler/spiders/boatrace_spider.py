@@ -78,9 +78,9 @@ class BoatraceSpider(scrapy.Spider):
     def parse_calendar(self, response):
         """Parse calendar page.
 
-        @url https://www.boatrace.jp/owpc/pc/race/monthlyschedule?ym=202308
+        @url https://www.boatrace.jp/owpc/pc/race/monthlyschedule?ym=202307
         @returns items 0 0
-        @returns requests 53 53
+        @returns requests 81 81
         @calendar_contract
         """
         self.logger.info(f"#parse_calendar: start: response={response.url}")
