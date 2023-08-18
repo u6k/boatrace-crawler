@@ -3,7 +3,7 @@ from urllib.parse import parse_qs, urlparse
 import scrapy
 from scrapy.loader import ItemLoader
 
-from boatrace_crawler.items import RaceIndexItem
+from boatrace_crawler.items import RaceIndexItem, RaceProgramBracketItem, RaceProgramBracketResultsItem, RaceProgramItem
 
 
 class BoatraceSpider(scrapy.Spider):
@@ -44,6 +44,34 @@ class BoatraceSpider(scrapy.Spider):
             self.logger.debug("#_follow: follow race program page")
             return scrapy.Request(url, callback=self.parse_race_program, meta=meta)
 
+        elif url.startswith("https://www.boatrace.jp/owpc/pc/race/odds3t?"):
+            self.logger.debug("#_follow: follow odds 3t page")
+            return scrapy.Request(url, callback=self.parse_odds_3t, meta=meta)
+
+        elif url.startswith("https://www.boatrace.jp/owpc/pc/race/odds3f?"):
+            self.logger.debug("#_follow: follow odds 3f page")
+            return scrapy.Request(url, callback=self.parse_odds_3f, meta=meta)
+
+        elif url.startswith("https://www.boatrace.jp/owpc/pc/race/odds2tf?"):
+            self.logger.debug("#_follow: follow odds 2tf page")
+            return scrapy.Request(url, callback=self.parse_odds_2tf, meta=meta)
+
+        elif url.startswith("https://www.boatrace.jp/owpc/pc/race/oddsk?"):
+            self.logger.debug("#_follow: follow odds k page")
+            return scrapy.Request(url, callback=self.parse_odds_k, meta=meta)
+
+        elif url.startswith("https://www.boatrace.jp/owpc/pc/race/oddstf?"):
+            self.logger.debug("#_follow: follow odds tf page")
+            return scrapy.Request(url, callback=self.parse_odds_tf, meta=meta)
+
+        elif url.startswith("https://www.boatrace.jp/owpc/pc/race/raceresult?"):
+            self.logger.debug("#_follow: follow race result page")
+            return scrapy.Request(url, callback=self.parse_race_result, meta=meta)
+
+        elif url.startswith("https://www.boatrace.jp/owpc/pc/data/racersearch/profile?"):
+            self.logger.debug("#_follow: follow racer profile page")
+            return scrapy.Request(url, callback=self.parse_racer_profile, meta=meta)
+
         else:
             raise Exception("Unknown url")
 
@@ -73,13 +101,14 @@ class BoatraceSpider(scrapy.Spider):
 
         @url https://www.boatrace.jp/owpc/pc/race/raceindex?jcd=01&hd=20230731
         @returns items 1 1
-        @returns requests 17
+        @returns requests 17 17
         @race_index_contract
         """
         self.logger.info(f"#parse_race_index: start: response={response.url}")
 
         # レースインデックスを構築する
-        loader = ItemLoader(item=RaceIndexItem(type="RaceIndexItem"), response=response)
+        loader = ItemLoader(item=RaceIndexItem(), response=response)
+        loader.add_value("url", response.url)
 
         race_index_url = urlparse(response.url)
         race_index_qs = parse_qs(race_index_url.query)
@@ -122,6 +151,185 @@ class BoatraceSpider(scrapy.Spider):
     def parse_race_program(self, response):
         """Parse race program page.
 
-        @url https://www.boatrace.jp/owpc/pc/race/racelist?rno=1&jcd=01&hd=20230817
+        @url https://www.boatrace.jp/owpc/pc/race/racelist?rno=5&jcd=01&hd=20230817
+        @returns items 91 91
+        @returns requests 12 12
+        @race_program_contract
         """
         self.logger.info(f"#parse_race_program: start: response={response.url}")
+
+        race_program_url = urlparse(response.url)
+        race_program_qs = parse_qs(race_program_url.query)
+
+        #
+        # レース出走表を構築する
+        #
+        loader = ItemLoader(item=RaceProgramItem(), response=response)
+        loader.add_value("url", response.url)
+        loader.add_xpath("course_length", "//h3[@class='title16_titleDetail__add2020']/text()")
+
+        # 出走時刻を抽出する
+        race_round_classes = []
+        for th in response.xpath("//div[@class='table1 h-mt10']/table/thead/tr/th"):
+            race_round_classes.append(th.xpath("@class").get())
+
+        start_times = []
+        for td in response.xpath("//div[@class='table1 h-mt10']/table/tbody/tr/td"):
+            start_times.append(td.xpath("text()").get())
+
+        for race_round_class, start_time in zip(race_round_classes, start_times):
+            if race_round_class is None:
+                loader.add_value("start_time", start_time)
+
+        item = loader.load_item()
+
+        self.logger.debug(f"#parse_race_program: race_program={item}")
+        yield item
+
+        #
+        # ボートレーサーを構築する
+        #
+        for tbody in response.xpath("//div[@class='table1 is-tableFixed__3rdadd']/table/tbody"):
+            loader = ItemLoader(item=RaceProgramBracketItem(), selector=tbody)
+
+            loader.add_value("url", response.url + "#bracket")
+            loader.add_xpath("bracket_number", "tr[1]/td[1]/text()")
+            loader.add_xpath("racer_data1", "string(tr[1]/td[3]/div[1])")
+            loader.add_xpath("racer_data2", "string(tr[1]/td[3]/div[3])")
+            loader.add_xpath("racer_data3", "string(tr[1]/td[4])")
+            loader.add_xpath("racer_rate_all_place", "string(tr[1]/td[5])")
+            loader.add_xpath("racer_rate_current_place", "string(tr[1]/td[6])")
+            loader.add_xpath("motor_rate", "string(tr[1]/td[7])")
+            loader.add_xpath("boat_rate", "string(tr[1]/td[8])")
+
+            item = loader.load_item()
+
+            self.logger.debug(f"#parse_race_program: race_program_bracket={item}")
+            yield item
+
+            #
+            # 今節成績を構築する
+            #
+            for i in range(14):
+                loader = ItemLoader(item=RaceProgramBracketResultsItem(), selector=tbody)
+                loader.add_value("url", response.url + "#bracket_result")
+                loader.add_xpath("bracket_number", "tr[1]/td[1]/text()")
+                loader.add_value("run_number", i)
+                loader.add_xpath("bracket_color", f"tr[1]/td[{i+10}]/@class")
+                loader.add_xpath("race_round", f"tr[1]/td[{i+10}]/text()")
+                loader.add_xpath("approach_course", f"tr[2]/td[{i+1}]/text()")
+                loader.add_xpath("start_timing", f"tr[3]/td[{i+1}]/text()")
+                loader.add_xpath("result", f"tr[4]/td[{i+1}]/a/text()")
+
+                item = loader.load_item()
+
+                self.logger.debug(f"#parse_race_program: race_program_bracket_result={item}")
+                yield item
+
+        #
+        # リンクを解析する
+        #
+
+        # オッズ
+        odds_url = response.urljoin(f"/owpc/pc/race/odds3t?rno={race_program_qs['rno'][0]}&jcd={race_program_qs['jcd'][0]}&hd={race_program_qs['hd'][0]}")
+        self.logger.debug(f"#parse_race_program: a={odds_url}")
+        yield self._follow(odds_url)
+
+        odds_url = response.urljoin(f"/owpc/pc/race/odds3f?rno={race_program_qs['rno'][0]}&jcd={race_program_qs['jcd'][0]}&hd={race_program_qs['hd'][0]}")
+        self.logger.debug(f"#parse_race_program: a={odds_url}")
+        yield self._follow(odds_url)
+
+        odds_url = response.urljoin(f"/owpc/pc/race/odds2tf?rno={race_program_qs['rno'][0]}&jcd={race_program_qs['jcd'][0]}&hd={race_program_qs['hd'][0]}")
+        self.logger.debug(f"#parse_race_program: a={odds_url}")
+        yield self._follow(odds_url)
+
+        odds_url = response.urljoin(f"/owpc/pc/race/oddsk?rno={race_program_qs['rno'][0]}&jcd={race_program_qs['jcd'][0]}&hd={race_program_qs['hd'][0]}")
+        self.logger.debug(f"#parse_race_program: a={odds_url}")
+        yield self._follow(odds_url)
+
+        odds_url = response.urljoin(f"/owpc/pc/race/oddstf?rno={race_program_qs['rno'][0]}&jcd={race_program_qs['jcd'][0]}&hd={race_program_qs['hd'][0]}")
+        self.logger.debug(f"#parse_race_program: a={odds_url}")
+        yield self._follow(odds_url)
+
+        # 結果
+        result_url = response.urljoin(f"/owpc/pc/race/raceresult?rno={race_program_qs['rno'][0]}&jcd={race_program_qs['jcd'][0]}&hd={race_program_qs['hd'][0]}")
+        self.logger.debug(f"#parse_race_program: a={result_url}")
+        yield self._follow(result_url)
+
+        # レーサー
+        for a in response.xpath("//div[@class='table1 is-tableFixed__3rdadd']/table/tbody/tr/td[3]//a"):
+            profile_url = urlparse(response.urljoin(a.xpath("@href").get()))
+
+            if profile_url.path == "/owpc/pc/data/racersearch/profile":
+                self.logger.debug(f"#parse_race_program: a={profile_url.geturl()}")
+                yield self._follow((profile_url.geturl()))
+
+    def parse_odds_3t(self, response):
+        """Parse odds 3t page.
+
+        @url https://www.boatrace.jp/owpc/pc/race/odds3t?rno=5&jcd=01&hd=20230817
+        @returns items 0 0
+        @returns requests 0 0
+        @odds_3t_contract
+        """
+        self.logger.info(f"#parse_odds_3t: start: response={response.url}")
+
+    def parse_odds_3f(self, response):
+        """Parse odds 3f page.
+
+        @url https://www.boatrace.jp/owpc/pc/race/odds3f?rno=5&jcd=01&hd=20230817
+        @returns items 0 0
+        @returns requests 0 0
+        @odds_3f_contract
+        """
+        self.logger.info(f"#parse_odds_3f: start: response={response.url}")
+
+    def parse_odds_2tf(self, response):
+        """Parse odds 2tf page.
+
+        @url https://www.boatrace.jp/owpc/pc/race/odds2tf?rno=5&jcd=01&hd=20230817
+        @returns items 0 0
+        @returns requests 0 0
+        @odds_2tf_contract
+        """
+        self.logger.info(f"#parse_odds_2tf: start: response={response.url}")
+
+    def parse_odds_k(self, response):
+        """Parse odds k page.
+
+        @url https://www.boatrace.jp/owpc/pc/race/oddsk?rno=5&jcd=01&hd=20230817
+        @returns items 0 0
+        @returns requests 0 0
+        @odds_k_contract
+        """
+        self.logger.info(f"#parse_odds_k: start: response={response.url}")
+
+    def parse_odds_tf(self, response):
+        """Parse odds tf page.
+
+        @url https://www.boatrace.jp/owpc/pc/race/oddstf?rno=5&jcd=01&hd=20230817
+        @returns items 0 0
+        @returns requests 0 0
+        @odds_tf_contract
+        """
+        self.logger.info(f"#parse_odds_tf: start: response={response.url}")
+
+    def parse_race_result(self, response):
+        """Parse race result page.
+
+        @url https://www.boatrace.jp/owpc/pc/race/raceresult?rno=5&jcd=01&hd=20230817
+        @returns items 0 0
+        @returns requests 0 0
+        @race_result_contract
+        """
+        self.logger.info(f"#parse_race_result: start: response={response.url}")
+
+    def parse_racer_profile(self, response):
+        """Parse racer profile page.
+
+        @url https://www.boatrace.jp/owpc/pc/data/racersearch/profile?toban=4463
+        @returns items 0 0
+        @returns requests 0 0
+        @racer_profile_contract
+        """
+        self.logger.info(f"#parse_racer_profile: start: response={response.url}")
