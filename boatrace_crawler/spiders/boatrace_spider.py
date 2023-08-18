@@ -311,11 +311,49 @@ class BoatraceSpider(scrapy.Spider):
         """Parse odds 3f page.
 
         @url https://www.boatrace.jp/owpc/pc/race/odds3f?rno=5&jcd=01&hd=20230817
-        @returns items 0 0
+        @returns items 20 20
         @returns requests 0 0
         @odds_3f_contract
         """
         self.logger.info(f"#parse_odds_3f: start: response={response.url}")
+
+        table = response.xpath("//div[@class='table1']/table")
+
+        def load_odds_item(bracket_number_1, bracket_number_2, bracket_number_3, table_row, table_col):
+            odds = table.xpath(f"tbody/tr[{table_row}]/td[{table_col}]/text()").get()
+
+            loader = ItemLoader(item=OddsItem(), selector=None)
+            loader.add_value("url", response.url)
+            loader.add_value("bracket_number_1", bracket_number_1)
+            loader.add_value("bracket_number_2", bracket_number_2)
+            loader.add_value("bracket_number_3", bracket_number_3)
+            loader.add_value("odds", odds)
+
+            item = loader.load_item()
+
+            self.logger.debug(f"#parse_odds_3f: odds={item}")
+            return item
+
+        yield load_odds_item(1, 2, 3, 1, 3)
+        yield load_odds_item(1, 2, 4, 2, 2)
+        yield load_odds_item(1, 2, 5, 3, 2)
+        yield load_odds_item(1, 2, 6, 4, 2)
+        yield load_odds_item(1, 3, 4, 5, 3)
+        yield load_odds_item(1, 3, 5, 6, 2)
+        yield load_odds_item(1, 3, 6, 7, 2)
+        yield load_odds_item(1, 4, 5, 8, 3)
+        yield load_odds_item(1, 4, 6, 9, 2)
+        yield load_odds_item(1, 5, 6, 10, 3)
+        yield load_odds_item(2, 3, 4, 5, 3)
+        yield load_odds_item(2, 3, 5, 6, 2)
+        yield load_odds_item(2, 3, 6, 7, 2)
+        yield load_odds_item(2, 4, 5, 8, 3)
+        yield load_odds_item(2, 4, 6, 9, 2)
+        yield load_odds_item(2, 5, 6, 10, 3)
+        yield load_odds_item(3, 4, 5, 8, 3)
+        yield load_odds_item(3, 4, 6, 9, 2)
+        yield load_odds_item(3, 5, 6, 10, 3)
+        yield load_odds_item(4, 5, 6, 10, 3)
 
     def parse_odds_2tf(self, response):
         """Parse odds 2tf page.

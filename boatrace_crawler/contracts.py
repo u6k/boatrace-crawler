@@ -196,7 +196,152 @@ class Odds3fContract(Contract):
     name = "odds_3f_contract"
 
     def post_process(self, output):
-        pass
+        #
+        # Check items
+        #
+        items = list(filter(lambda o: isinstance(o, OddsItem), output))
+
+        assert len(items) == 20
+
+        i = items[0]
+        assert i["bracket_number_1"] == [1]
+        assert i["bracket_number_2"] == [2]
+        assert i["bracket_number_3"] == [3]
+        assert i["odds"] == ["4.1"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds3f?rno=5&jcd=01&hd=20230817"]
+
+        i = items[1]
+        assert i["bracket_number_1"] == [1]
+        assert i["bracket_number_2"] == [2]
+        assert i["bracket_number_3"] == [4]
+        assert i["odds"] == ["7.1"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds3f?rno=5&jcd=01&hd=20230817"]
+
+        i = items[2]
+        assert i["bracket_number_1"] == [1]
+        assert i["bracket_number_2"] == [2]
+        assert i["bracket_number_3"] == [5]
+        assert i["odds"] == ["4.0"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds3f?rno=5&jcd=01&hd=20230817"]
+
+        i = items[3]
+        assert i["bracket_number_1"] == [1]
+        assert i["bracket_number_2"] == [2]
+        assert i["bracket_number_3"] == [6]
+        assert i["odds"] == ["13.2"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds3f?rno=5&jcd=01&hd=20230817"]
+
+        i = items[4]
+        assert i["bracket_number_1"] == [1]
+        assert i["bracket_number_2"] == [3]
+        assert i["bracket_number_3"] == [4]
+        assert i["odds"] == ["13.2"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds3f?rno=5&jcd=01&hd=20230817"]
+
+        i = items[5]
+        assert i["bracket_number_1"] == [1]
+        assert i["bracket_number_2"] == [3]
+        assert i["bracket_number_3"] == [5]
+        assert i["odds"] == ["10.0"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds3f?rno=5&jcd=01&hd=20230817"]
+
+        i = items[6]
+        assert i["bracket_number_1"] == [1]
+        assert i["bracket_number_2"] == [3]
+        assert i["bracket_number_3"] == [6]
+        assert i["odds"] == ["23.2"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds3f?rno=5&jcd=01&hd=20230817"]
+
+        i = items[7]
+        assert i["bracket_number_1"] == [1]
+        assert i["bracket_number_2"] == [4]
+        assert i["bracket_number_3"] == [5]
+        assert i["odds"] == ["10.7"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds3f?rno=5&jcd=01&hd=20230817"]
+
+        i = items[8]
+        assert i["bracket_number_1"] == [1]
+        assert i["bracket_number_2"] == [4]
+        assert i["bracket_number_3"] == [6]
+        assert i["odds"] == ["21.8"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds3f?rno=5&jcd=01&hd=20230817"]
+
+        i = items[9]
+        assert i["bracket_number_1"] == [1]
+        assert i["bracket_number_2"] == [5]
+        assert i["bracket_number_3"] == [6]
+        assert i["odds"] == ["21.3"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds3f?rno=5&jcd=01&hd=20230817"]
+
+        i = items[10]
+        assert i["bracket_number_1"] == [2]
+        assert i["bracket_number_2"] == [3]
+        assert i["bracket_number_3"] == [4]
+        assert i["odds"] == ["13.2"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds3f?rno=5&jcd=01&hd=20230817"]
+
+        i = items[11]
+        assert i["bracket_number_1"] == [2]
+        assert i["bracket_number_2"] == [3]
+        assert i["bracket_number_3"] == [5]
+        assert i["odds"] == ["10.0"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds3f?rno=5&jcd=01&hd=20230817"]
+
+        i = items[12]
+        assert i["bracket_number_1"] == [2]
+        assert i["bracket_number_2"] == [3]
+        assert i["bracket_number_3"] == [6]
+        assert i["odds"] == ["23.2"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds3f?rno=5&jcd=01&hd=20230817"]
+
+        i = items[13]
+        assert i["bracket_number_1"] == [2]
+        assert i["bracket_number_2"] == [4]
+        assert i["bracket_number_3"] == [5]
+        assert i["odds"] == ["10.7"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds3f?rno=5&jcd=01&hd=20230817"]
+
+        i = items[14]
+        assert i["bracket_number_1"] == [2]
+        assert i["bracket_number_2"] == [4]
+        assert i["bracket_number_3"] == [6]
+        assert i["odds"] == ["21.8"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds3f?rno=5&jcd=01&hd=20230817"]
+
+        i = items[15]
+        assert i["bracket_number_1"] == [2]
+        assert i["bracket_number_2"] == [5]
+        assert i["bracket_number_3"] == [6]
+        assert i["odds"] == ["21.3"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds3f?rno=5&jcd=01&hd=20230817"]
+
+        i = items[16]
+        assert i["bracket_number_1"] == [3]
+        assert i["bracket_number_2"] == [4]
+        assert i["bracket_number_3"] == [5]
+        assert i["odds"] == ["10.7"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds3f?rno=5&jcd=01&hd=20230817"]
+
+        i = items[17]
+        assert i["bracket_number_1"] == [3]
+        assert i["bracket_number_2"] == [4]
+        assert i["bracket_number_3"] == [6]
+        assert i["odds"] == ["21.8"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds3f?rno=5&jcd=01&hd=20230817"]
+
+        i = items[18]
+        assert i["bracket_number_1"] == [3]
+        assert i["bracket_number_2"] == [5]
+        assert i["bracket_number_3"] == [6]
+        assert i["odds"] == ["21.3"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds3f?rno=5&jcd=01&hd=20230817"]
+
+        i = items[19]
+        assert i["bracket_number_1"] == [4]
+        assert i["bracket_number_2"] == [5]
+        assert i["bracket_number_3"] == [6]
+        assert i["odds"] == ["21.3"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds3f?rno=5&jcd=01&hd=20230817"]
 
 
 class Odds2tfContract(Contract):
