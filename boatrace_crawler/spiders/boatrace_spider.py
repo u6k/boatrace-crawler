@@ -304,7 +304,7 @@ class BoatraceSpider(scrapy.Spider):
                     loader.add_value("bracket_number_1", bracket_number_1)
                     loader.add_value("bracket_number_2", bracket_number_2)
                     loader.add_value("bracket_number_3", bracket_number_3)
-                    loader.add_value("odds1", odds)
+                    loader.add_value("odds", odds)
 
                     item = loader.load_item()
 
@@ -331,7 +331,7 @@ class BoatraceSpider(scrapy.Spider):
             loader.add_value("bracket_number_1", bracket_number_1)
             loader.add_value("bracket_number_2", bracket_number_2)
             loader.add_value("bracket_number_3", bracket_number_3)
-            loader.add_value("odds1", odds)
+            loader.add_value("odds", odds)
 
             item = loader.load_item()
 
@@ -378,7 +378,7 @@ class BoatraceSpider(scrapy.Spider):
                 loader.add_value("url", response.url + "#odds2t")
                 loader.add_xpath("bracket_number_1", f"thead/tr/th[{i*2+1}]/text()")
                 loader.add_xpath("bracket_number_2", f"tbody/tr[{j+1}]/td[{i*2+1}]/text()")
-                loader.add_xpath("odds1", f"tbody/tr[{j+1}]/td[{i*2+2}]/text()")
+                loader.add_xpath("odds", f"tbody/tr[{j+1}]/td[{i*2+2}]/text()")
 
                 item = loader.load_item()
 
@@ -394,7 +394,7 @@ class BoatraceSpider(scrapy.Spider):
                 loader.add_value("url", response.url + "#odds2f")
                 loader.add_xpath("bracket_number_1", f"thead/tr/th[{i*2+1}]/text()")
                 loader.add_xpath("bracket_number_2", f"tbody/tr[{j+1}]/td[{i*2+1}]/text()")
-                loader.add_xpath("odds1", f"tbody/tr[{j+1}]/td[{i*2+2}]/text()")
+                loader.add_xpath("odds", f"tbody/tr[{j+1}]/td[{i*2+2}]/text()")
 
                 item = loader.load_item()
 
@@ -409,11 +409,30 @@ class BoatraceSpider(scrapy.Spider):
         """Parse odds k page.
 
         @url https://www.boatrace.jp/owpc/pc/race/oddsk?rno=5&jcd=01&hd=20230817
-        @returns items 0 0
+        @returns items 15 15
         @returns requests 0 0
         @odds_k_contract
         """
         self.logger.info(f"#parse_odds_k: start: response={response.url}")
+
+        table = response.xpath("//div[@class='table1'][1]/table")
+
+        for i in range(6):
+            for j in range(5):
+                loader = ItemLoader(item=OddsItem(), selector=table)
+                loader.add_value("url", response.url)
+                loader.add_xpath("bracket_number_1", f"thead/tr/th[{i*2+1}]/text()")
+                loader.add_xpath("bracket_number_2", f"tbody/tr[{j+1}]/td[{i*2+1}]/text()")
+                loader.add_xpath("odds", f"tbody/tr[{j+1}]/td[{i*2+2}]/text()")
+
+                item = loader.load_item()
+
+                if len(item["bracket_number_2"][0].strip()) == 0:
+                    # 空データの場合、読み飛ばす
+                    continue
+
+                self.logger.debug(f"#parse_odds_k: odds={item}")
+                yield item
 
     def parse_odds_tf(self, response):
         """Parse odds tf page.
