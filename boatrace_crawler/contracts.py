@@ -117,6 +117,7 @@ class RaceProgramContract(Contract):
         assert i["start_timing"] == [".22"]
         assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/racelist?rno=5&jcd=01&hd=20230817#bracket_result"]
 
+        # TODO: 空データは読み飛ばす
         i = items[83]
         assert i["approach_course"] == ["\xa0"]
         assert i["bracket_color"] == ["is-outColor "]
@@ -348,7 +349,67 @@ class Odds2tfContract(Contract):
     name = "odds_2tf_contract"
 
     def post_process(self, output):
-        pass
+        #
+        # Check items
+        #
+
+        # 2連単オッズ
+        items = list(filter(lambda o: isinstance(o, OddsItem) and o["url"][0].endswith("#odds2t"), output))
+
+        assert len(items) == 30
+
+        i = items[0]
+        assert i["bracket_number_1"] == ["1"]
+        assert i["bracket_number_2"] == ["2"]
+        assert i["odds"] == ["2.7"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds2tf?rno=5&jcd=01&hd=20230817#odds2t"]
+
+        i = items[4]
+        assert i["bracket_number_1"] == ["1"]
+        assert i["bracket_number_2"] == ["6"]
+        assert i["odds"] == ["30.0"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds2tf?rno=5&jcd=01&hd=20230817#odds2t"]
+
+        i = items[5]
+        assert i["bracket_number_1"] == ["2"]
+        assert i["bracket_number_2"] == ["1"]
+        assert i["odds"] == ["11.8"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds2tf?rno=5&jcd=01&hd=20230817#odds2t"]
+
+        i = items[29]
+        assert i["bracket_number_1"] == ["6"]
+        assert i["bracket_number_2"] == ["5"]
+        assert i["odds"] == ["171.7"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds2tf?rno=5&jcd=01&hd=20230817#odds2t"]
+
+        # 2連複オッズ
+        items = list(filter(lambda o: isinstance(o, OddsItem) and o["url"][0].endswith("#odds2f"), output))
+
+        assert len(items) == 15
+
+        i = items[0]
+        assert i["bracket_number_1"] == ["1"]
+        assert i["bracket_number_2"] == ["2"]
+        assert i["odds"] == ["2.4"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds2tf?rno=5&jcd=01&hd=20230817#odds2f"]
+
+        i = items[4]
+        assert i["bracket_number_1"] == ["1"]
+        assert i["bracket_number_2"] == ["6"]
+        assert i["odds"] == ["19.3"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds2tf?rno=5&jcd=01&hd=20230817#odds2f"]
+
+        i = items[5]
+        assert i["bracket_number_1"] == ["2"]
+        assert i["bracket_number_2"] == ["3"]
+        assert i["odds"] == ["36.2"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds2tf?rno=5&jcd=01&hd=20230817#odds2f"]
+
+        i = items[14]
+        assert i["bracket_number_1"] == ["5"]
+        assert i["bracket_number_2"] == ["6"]
+        assert i["odds"] == ["61.7"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/odds2tf?rno=5&jcd=01&hd=20230817#odds2f"]
 
 
 class OddskContract(Contract):

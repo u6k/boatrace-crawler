@@ -359,11 +359,47 @@ class BoatraceSpider(scrapy.Spider):
         """Parse odds 2tf page.
 
         @url https://www.boatrace.jp/owpc/pc/race/odds2tf?rno=5&jcd=01&hd=20230817
-        @returns items 0 0
+        @returns items 45 45
         @returns requests 0 0
         @odds_2tf_contract
         """
         self.logger.info(f"#parse_odds_2tf: start: response={response.url}")
+
+        # 2連単オッズをパースする
+        table = response.xpath("//div[@class='table1'][1]/table")
+
+        for i in range(6):
+            for j in range(5):
+                loader = ItemLoader(item=OddsItem(), selector=table)
+                loader.add_value("url", response.url + "#odds2t")
+                loader.add_xpath("bracket_number_1", f"thead/tr/th[{i*2+1}]/text()")
+                loader.add_xpath("bracket_number_2", f"tbody/tr[{j+1}]/td[{i*2+1}]/text()")
+                loader.add_xpath("odds", f"tbody/tr[{j+1}]/td[{i*2+2}]/text()")
+
+                item = loader.load_item()
+
+                self.logger.debug(f"#parse_odds_2tf: odds={item}")
+                yield item
+
+        # 2連複オッズをパースする
+        table = response.xpath("//div[@class='table1'][2]/table")
+
+        for i in range(6):
+            for j in range(5):
+                loader = ItemLoader(item=OddsItem(), selector=table)
+                loader.add_value("url", response.url + "#odds2f")
+                loader.add_xpath("bracket_number_1", f"thead/tr/th[{i*2+1}]/text()")
+                loader.add_xpath("bracket_number_2", f"tbody/tr[{j+1}]/td[{i*2+1}]/text()")
+                loader.add_xpath("odds", f"tbody/tr[{j+1}]/td[{i*2+2}]/text()")
+
+                item = loader.load_item()
+
+                if len(item["bracket_number_2"][0].strip()) == 0:
+                    # 空データの場合、読み飛ばす
+                    continue
+
+                self.logger.debug(f"#parse_odds_2tf: odds={item}")
+                yield item
 
     def parse_odds_k(self, response):
         """Parse odds k page.
