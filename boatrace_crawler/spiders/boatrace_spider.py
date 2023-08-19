@@ -438,11 +438,39 @@ class BoatraceSpider(scrapy.Spider):
         """Parse odds tf page.
 
         @url https://www.boatrace.jp/owpc/pc/race/oddstf?rno=5&jcd=01&hd=20230817
-        @returns items 0 0
+        @returns items 12 12
         @returns requests 0 0
         @odds_tf_contract
         """
         self.logger.info(f"#parse_odds_tf: start: response={response.url}")
+
+        # 単勝オッズをパースする
+        table = response.xpath("//div[@class='grid_unit'][1]/div[@class='table1']/table")
+
+        for i in range(6):
+            loader = ItemLoader(item=OddsItem(), selector=table)
+            loader.add_value("url", response.url + "#oddst")
+            loader.add_xpath("bracket_number_1", f"tbody[{i+1}]/tr/td[1]/text()")
+            loader.add_xpath("odds", f"tbody[{i+1}]/tr/td[3]/text()")
+
+            item = loader.load_item()
+
+            self.logger.debug(f"#parse_odds_tf: odds={item}")
+            yield item
+
+        # 複勝オッズをパースする
+        table = response.xpath("//div[@class='grid_unit'][2]/div[@class='table1']/table")
+
+        for i in range(6):
+            loader = ItemLoader(item=OddsItem(), selector=table)
+            loader.add_value("url", response.url + "#oddsf")
+            loader.add_xpath("bracket_number_1", f"tbody[{i+1}]/tr/td[1]/text()")
+            loader.add_xpath("odds", f"tbody[{i+1}]/tr/td[3]/text()")
+
+            item = loader.load_item()
+
+            self.logger.debug(f"#parse_odds_tf: odds={item}")
+            yield item
 
     def parse_race_result(self, response):
         """Parse race result page.

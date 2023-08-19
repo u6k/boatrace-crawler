@@ -472,7 +472,32 @@ class OddstfContract(Contract):
     name = "odds_tf_contract"
 
     def post_process(self, output):
-        pass
+        #
+        # Check items
+        #
+        items = list(filter(lambda o: isinstance(o, OddsItem), output))
+
+        assert len(items) == 12
+
+        i = items[0]
+        assert i["bracket_number_1"] == ["1"]
+        assert i["odds"] == ["1.2"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/oddstf?rno=5&jcd=01&hd=20230817#oddst"]
+
+        i = items[5]
+        assert i["bracket_number_1"] == ["6"]
+        assert i["odds"] == ["10.9"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/oddstf?rno=5&jcd=01&hd=20230817#oddst"]
+
+        i = items[6]
+        assert i["bracket_number_1"] == ["1"]
+        assert i["odds"] == ["1.0-1.4"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/oddstf?rno=5&jcd=01&hd=20230817#oddsf"]
+
+        i = items[11]
+        assert i["bracket_number_1"] == ["6"]
+        assert i["odds"] == ["4.3-6.4"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/oddstf?rno=5&jcd=01&hd=20230817#oddsf"]
 
 
 class RaceResultContract(Contract):
