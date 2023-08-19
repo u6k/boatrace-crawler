@@ -105,7 +105,7 @@ class RaceProgramContract(Contract):
 
         items = list(filter(lambda o: isinstance(o, RaceProgramBracketResultsItem), output))
 
-        assert len(items) == 84
+        assert len(items) == 42
 
         i = items[0]
         assert i["approach_course"] == ["4"]
@@ -117,14 +117,34 @@ class RaceProgramContract(Contract):
         assert i["start_timing"] == [".22"]
         assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/racelist?rno=5&jcd=01&hd=20230817#bracket_result"]
 
-        # TODO: 空データは読み飛ばす
-        i = items[83]
-        assert i["approach_course"] == ["\xa0"]
-        assert i["bracket_color"] == ["is-outColor "]
+        i = items[6]
+        assert i["approach_course"] == ["4"]
+        assert i["bracket_color"] == [" is-boatColor5"]
+        assert i["bracket_number"] == ["１"]
+        assert i["race_round"] == ["11"]
+        assert i["result"] == ["２"]
+        assert i["run_number"] == [7]
+        assert i["start_timing"] == [".14"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/racelist?rno=5&jcd=01&hd=20230817#bracket_result"]
+
+        i = items[7]
+        assert i["approach_course"] == ["4"]
+        assert i["bracket_color"] == [" is-boatColor4"]
+        assert i["bracket_number"] == ["２"]
+        assert i["race_round"] == ["4"]
+        assert i["result"] == ["６"]
+        assert i["run_number"] == [0]
+        assert i["start_timing"] == [".26"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/racelist?rno=5&jcd=01&hd=20230817#bracket_result"]
+
+        i = items[41]
+        assert i["approach_course"] == ["2"]
+        assert i["bracket_color"] == [" is-boatColor2"]
         assert i["bracket_number"] == ["６"]
-        assert i["race_round"] == ["\xa0"]
-        assert i["run_number"] == [13]
-        assert i["start_timing"] == ["\xa0"]
+        assert i["race_round"] == ["2"]
+        assert i["result"] == ["２"]
+        assert i["run_number"] == [8]
+        assert i["start_timing"] == [".14"]
         assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/racelist?rno=5&jcd=01&hd=20230817#bracket_result"]
 
         #

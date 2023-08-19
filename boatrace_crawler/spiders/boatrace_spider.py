@@ -152,7 +152,7 @@ class BoatraceSpider(scrapy.Spider):
         """Parse race program page.
 
         @url https://www.boatrace.jp/owpc/pc/race/racelist?rno=5&jcd=01&hd=20230817
-        @returns items 91 91
+        @returns items 49 49
         @returns requests 12 12
         @race_program_contract
         """
@@ -222,6 +222,10 @@ class BoatraceSpider(scrapy.Spider):
                 loader.add_xpath("result", f"tr[4]/td[{i+1}]/a/text()")
 
                 item = loader.load_item()
+
+                if item["race_round"][0] == "\xa0":
+                    # 空データの場合、読み飛ばす
+                    continue
 
                 self.logger.debug(f"#parse_race_program: race_program_bracket_result={item}")
                 yield item
