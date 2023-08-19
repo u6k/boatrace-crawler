@@ -304,7 +304,7 @@ class BoatraceSpider(scrapy.Spider):
                     loader.add_value("bracket_number_1", bracket_number_1)
                     loader.add_value("bracket_number_2", bracket_number_2)
                     loader.add_value("bracket_number_3", bracket_number_3)
-                    loader.add_value("odds", odds)
+                    loader.add_value("odds1", odds)
 
                     item = loader.load_item()
 
@@ -331,7 +331,7 @@ class BoatraceSpider(scrapy.Spider):
             loader.add_value("bracket_number_1", bracket_number_1)
             loader.add_value("bracket_number_2", bracket_number_2)
             loader.add_value("bracket_number_3", bracket_number_3)
-            loader.add_value("odds", odds)
+            loader.add_value("odds1", odds)
 
             item = loader.load_item()
 
@@ -378,7 +378,7 @@ class BoatraceSpider(scrapy.Spider):
                 loader.add_value("url", response.url + "#odds2t")
                 loader.add_xpath("bracket_number_1", f"thead/tr/th[{i*2+1}]/text()")
                 loader.add_xpath("bracket_number_2", f"tbody/tr[{j+1}]/td[{i*2+1}]/text()")
-                loader.add_xpath("odds", f"tbody/tr[{j+1}]/td[{i*2+2}]/text()")
+                loader.add_xpath("odds1", f"tbody/tr[{j+1}]/td[{i*2+2}]/text()")
 
                 item = loader.load_item()
 
@@ -394,7 +394,7 @@ class BoatraceSpider(scrapy.Spider):
                 loader.add_value("url", response.url + "#odds2f")
                 loader.add_xpath("bracket_number_1", f"thead/tr/th[{i*2+1}]/text()")
                 loader.add_xpath("bracket_number_2", f"tbody/tr[{j+1}]/td[{i*2+1}]/text()")
-                loader.add_xpath("odds", f"tbody/tr[{j+1}]/td[{i*2+2}]/text()")
+                loader.add_xpath("odds1", f"tbody/tr[{j+1}]/td[{i*2+2}]/text()")
 
                 item = loader.load_item()
 

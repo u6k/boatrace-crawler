@@ -44,4 +44,5 @@ class OddsItem(Item):
     bracket_number_1 = Field()
     bracket_number_2 = Field()
     bracket_number_3 = Field()
-    odds = Field()
+    odds1 = Field()
+    odds2 = Field()
