@@ -166,7 +166,7 @@ class BoatraceSpider(scrapy.Spider):
         #
         loader = ItemLoader(item=RaceProgramItem(), response=response)
         loader.add_value("url", response.url)
-        loader.add_xpath("course_length", "//h3[@class='title16_titleDetail__add2020']/text()")
+        loader.add_xpath("course_length", "translate(normalize-space(//h3[@class='title16_titleDetail__add2020']), ' ', '')")
 
         # 出走時刻を抽出する
         race_round_classes = []
@@ -194,13 +194,13 @@ class BoatraceSpider(scrapy.Spider):
 
             loader.add_value("url", response.url + "#bracket")
             loader.add_xpath("bracket_number", "tr[1]/td[1]/text()")
-            loader.add_xpath("racer_data1", "string(tr[1]/td[3]/div[1])")
-            loader.add_xpath("racer_data2", "string(tr[1]/td[3]/div[3])")
-            loader.add_xpath("racer_data3", "string(tr[1]/td[4])")
-            loader.add_xpath("racer_rate_all_place", "string(tr[1]/td[5])")
-            loader.add_xpath("racer_rate_current_place", "string(tr[1]/td[6])")
-            loader.add_xpath("motor_rate", "string(tr[1]/td[7])")
-            loader.add_xpath("boat_rate", "string(tr[1]/td[8])")
+            loader.add_xpath("racer_data1", "translate(normalize-space(tr[1]/td[3]/div[1]), ' ', '')")
+            loader.add_xpath("racer_data2", "translate(normalize-space(tr[1]/td[3]/div[3]), ' ', '/')")
+            loader.add_xpath("racer_data3", "translate(normalize-space(tr[1]/td[4]), ' ', '/')")
+            loader.add_xpath("racer_rate_all_place", "translate(normalize-space(tr[1]/td[5]), ' ', '/')")
+            loader.add_xpath("racer_rate_current_place", "translate(normalize-space(tr[1]/td[6]), ' ', '/')")
+            loader.add_xpath("motor_rate", "translate(normalize-space(tr[1]/td[7]), ' ', '/')")
+            loader.add_xpath("boat_rate", "translate(normalize-space(tr[1]/td[8]), ' ', '/')")
 
             item = loader.load_item()
 
@@ -504,7 +504,7 @@ class BoatraceSpider(scrapy.Spider):
             loader = ItemLoader(item=RaceResultStartTimeItem(), selector=tr)
             loader.add_value("url", response.url + "#start")
             loader.add_xpath("bracket_number", "td/div/span[1]/text()")
-            loader.add_xpath("start_time", "td/div/span[3]/span/text()")
+            loader.add_xpath("start_time", "translate(normalize-space(td/div/span[3]/span), ' ', '')")
 
             item = loader.load_item()
 
@@ -524,12 +524,12 @@ class BoatraceSpider(scrapy.Spider):
                 bet_type = tr.xpath("td[1]/text()").get()
 
                 loader.add_value("bet_type", bet_type)
-                loader.add_xpath("bracket_number", "string(td[2])")
+                loader.add_xpath("bracket_number", "translate(normalize-space(td[2]), ' ', '')")
                 loader.add_xpath("payoff", "string(td[3])")
                 loader.add_xpath("favorite", "string(td[4])")
             else:
                 loader.add_value("bet_type", bet_type)
-                loader.add_xpath("bracket_number", "string(td[1])")
+                loader.add_xpath("bracket_number", "translate(normalize-space(td[1]), ' ', '')")
                 loader.add_xpath("payoff", "string(td[2])")
                 loader.add_xpath("favorite", "string(td[3])")
 
