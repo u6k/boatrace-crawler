@@ -45,3 +45,29 @@ class OddsItem(Item):
     bracket_number_2 = Field()
     bracket_number_3 = Field()
     odds = Field()
+
+
+class RaceResultTimeItem(Item):
+    url = Field()
+    result = Field()
+    bracket_number = Field()
+    result_time = Field()
+
+
+class RaceResultStartTimeItem(Item):
+    url = Field()
+    bracket_number = Field()
+    start_time = Field()
+
+
+class RaceResultWeatherItem(Item):
+    # TODO: 必要なら、気象情報も収集する
+    pass
+
+
+class RaceResultPayoffItem(Item):
+    url = Field()
+    bet_type = Field()
+    bracket_number = Field()
+    payoff = Field()
+    favorite = Field()

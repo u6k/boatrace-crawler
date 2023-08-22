@@ -3,7 +3,7 @@ from urllib.parse import parse_qs, urlparse
 import scrapy
 from scrapy.loader import ItemLoader
 
-from boatrace_crawler.items import OddsItem, RaceIndexItem, RaceProgramBracketItem, RaceProgramBracketResultsItem, RaceProgramItem
+from boatrace_crawler.items import OddsItem, RaceIndexItem, RaceProgramBracketItem, RaceProgramBracketResultsItem, RaceProgramItem, RaceResultPayoffItem, RaceResultStartTimeItem, RaceResultTimeItem
 
 
 class BoatraceSpider(scrapy.Spider):
@@ -476,11 +476,71 @@ class BoatraceSpider(scrapy.Spider):
         """Parse race result page.
 
         @url https://www.boatrace.jp/owpc/pc/race/raceresult?rno=5&jcd=01&hd=20230817
-        @returns items 0 0
+        @returns items 22 22
         @returns requests 0 0
         @race_result_contract
         """
         self.logger.info(f"#parse_race_result: start: response={response.url}")
+
+        # 着順
+        table = response.xpath("//div[@class='table1']/table")[0]
+
+        for tbody in table.xpath("tbody"):
+            loader = ItemLoader(item=RaceResultTimeItem(), selector=tbody)
+            loader.add_value("url", response.url + "#result")
+            loader.add_xpath("result", "tr/td[1]/text()")
+            loader.add_xpath("bracket_number", "tr/td[2]/text()")
+            loader.add_xpath("result_time", "tr/td[4]/text()")
+
+            item = loader.load_item()
+
+            self.logger.debug(f"#parse_race_result: result={item}")
+            yield item
+
+        # スタート情報
+        table = response.xpath("//div[@class='table1']/table")[1]
+
+        for tr in table.xpath("tbody/tr"):
+            loader = ItemLoader(item=RaceResultStartTimeItem(), selector=tr)
+            loader.add_value("url", response.url + "#start")
+            loader.add_xpath("bracket_number", "td/div/span[1]/text()")
+            loader.add_xpath("start_time", "td/div/span[3]/span/text()")
+
+            item = loader.load_item()
+
+            self.logger.debug(f"#parse_race_result: start_time={item}")
+            yield item
+
+        # 払い戻し情報
+        table = response.xpath("//div[@class='table1']/table")[2]
+
+        bet_type = ""
+
+        for tr in table.xpath("tbody/tr"):
+            loader = ItemLoader(item=RaceResultPayoffItem(), selector=tr)
+            loader.add_value("url", response.url + "#payoff")
+
+            if len(tr.xpath("td")) == 4:
+                bet_type = tr.xpath("td[1]/text()").get()
+
+                loader.add_value("bet_type", bet_type)
+                loader.add_xpath("bracket_number", "string(td[2])")
+                loader.add_xpath("payoff", "string(td[3])")
+                loader.add_xpath("favorite", "string(td[4])")
+            else:
+                loader.add_value("bet_type", bet_type)
+                loader.add_xpath("bracket_number", "string(td[1])")
+                loader.add_xpath("payoff", "string(td[2])")
+                loader.add_xpath("favorite", "string(td[3])")
+
+            item = loader.load_item()
+
+            if len(item["bracket_number"][0].strip()) == 0:
+                # 空データの場合、読み飛ばす
+                continue
+
+            self.logger.debug(f"#parse_race_result: payoff={item}")
+            yield item
 
     def parse_racer_profile(self, response):
         """Parse racer profile page.

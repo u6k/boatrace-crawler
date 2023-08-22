@@ -4,7 +4,7 @@ from scrapy.contracts import Contract
 from scrapy.exceptions import ContractFail
 from scrapy.http import Request
 
-from boatrace_crawler.items import OddsItem, RaceIndexItem, RaceProgramBracketItem, RaceProgramBracketResultsItem, RaceProgramItem
+from boatrace_crawler.items import OddsItem, RaceIndexItem, RaceProgramBracketItem, RaceProgramBracketResultsItem, RaceProgramItem, RaceResultPayoffItem, RaceResultStartTimeItem, RaceResultTimeItem
 
 
 class CalendarContract(Contract):
@@ -504,7 +504,116 @@ class RaceResultContract(Contract):
     name = "race_result_contract"
 
     def post_process(self, output):
-        pass
+        #
+        # Check items
+        #
+
+        # 着順
+        items = list(filter(lambda o: isinstance(o, RaceResultTimeItem), output))
+
+        assert len(items) == 6
+
+        i = items[0]
+        assert i["bracket_number"] == ["1"]
+        assert i["result"] == ["１"]
+        assert i["result_time"] == ["1'51\"7"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/raceresult?rno=5&jcd=01&hd=20230817#result"]
+
+        i = items[5]
+        assert i["bracket_number"] == ["3"]
+        assert i["result"] == ["６"]
+        assert i["result_time"] == ["1'59\"1"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/raceresult?rno=5&jcd=01&hd=20230817#result"]
+
+        # スタート情報
+        items = list(filter(lambda o: isinstance(o, RaceResultStartTimeItem), output))
+
+        assert len(items) == 6
+
+        i = items[0]
+        assert i["bracket_number"] == ["1"]
+        assert i["start_time"] == [".14\xa0\xa0\xa0                 \n                                                  逃げ\n\t                                            "]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/raceresult?rno=5&jcd=01&hd=20230817#start"]
+
+        i = items[5]
+        assert i["bracket_number"] == ["6"]
+        assert i["start_time"] == [".11\xa0\xa0\xa0                 \n                                                  \xa0\n\t                                            "]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/raceresult?rno=5&jcd=01&hd=20230817#start"]
+
+        # オッズ情報
+        items = list(filter(lambda o: isinstance(o, RaceResultPayoffItem), output))
+
+        assert len(items) == 10
+
+        i = items[0]
+        assert i["bet_type"] == ["3連単"]
+        assert i["bracket_number"] == ["\n                                    \n                                      \n                                        1-4-2\n                                      \n                                                                        \n                                  "]
+        assert i["favorite"] == ["8"]
+        assert i["payoff"] == ["¥2,550"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/raceresult?rno=5&jcd=01&hd=20230817#payoff"]
+
+        i = items[1]
+        assert i["bet_type"] == ["3連複"]
+        assert i["bracket_number"] == ["                                                \n                                \n                                  \n                                    1=2=4\n                                  \n                                \n                              "]
+        assert i["favorite"] == ["3"]
+        assert i["payoff"] == ["¥710"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/raceresult?rno=5&jcd=01&hd=20230817#payoff"]
+
+        i = items[2]
+        assert i["bet_type"] == ["2連単"]
+        assert i["bracket_number"] == ["\n                                \n                                  1-4\n                                  \n                                \n                              "]
+        assert i["favorite"] == ["5"]
+        assert i["payoff"] == ["¥1,250"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/raceresult?rno=5&jcd=01&hd=20230817#payoff"]
+
+        i = items[3]
+        assert i["bet_type"] == ["2連複"]
+        assert i["bracket_number"] == ["\n                                \n                                  1=4\n                                  \n                                \n                              "]
+        assert i["favorite"] == ["2"]
+        assert i["payoff"] == ["¥420"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/raceresult?rno=5&jcd=01&hd=20230817#payoff"]
+
+        i = items[4]
+        assert i["bet_type"] == ["拡連複"]
+        assert i["bracket_number"] == [" \n                                  \n                                     1=4\n                                    \n                                  \n                              "]
+        assert i["favorite"] == ["5"]
+        assert i["payoff"] == ["¥310"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/raceresult?rno=5&jcd=01&hd=20230817#payoff"]
+
+        i = items[5]
+        assert i["bet_type"] == ["拡連複"]
+        assert i["bracket_number"] == [" \n                                  \n                                     1=2\n                                    \n                                  \n                              "]
+        assert i["favorite"] == ["1"]
+        assert i["payoff"] == ["¥110"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/raceresult?rno=5&jcd=01&hd=20230817#payoff"]
+
+        i = items[6]
+        assert i["bet_type"] == ["拡連複"]
+        assert i["bracket_number"] == [" \n                                  \n                                     2=4\n                                    \n                                  \n                              "]
+        assert i["favorite"] == ["7"]
+        assert i["payoff"] == ["¥430"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/raceresult?rno=5&jcd=01&hd=20230817#payoff"]
+
+        i = items[7]
+        assert i["bet_type"] == ["単勝"]
+        assert i["bracket_number"] == [" \n                                   \n                                     \n                                        1\n                                     \n                                    \n                            "]
+        assert i["favorite"] == ["\xa0"]
+        assert i["payoff"] == ["¥120"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/raceresult?rno=5&jcd=01&hd=20230817#payoff"]
+
+        i = items[8]
+        assert i["bet_type"] == ["複勝"]
+        assert i["bracket_number"] == ["\n                                \n                                  \n                                    1\n                                  \n                                    \n                              "]
+        assert i["favorite"] == ["\xa0"]
+        assert i["payoff"] == ["¥140"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/raceresult?rno=5&jcd=01&hd=20230817#payoff"]
+
+        i = items[9]
+        assert i["bet_type"] == ["複勝"]
+        assert i["bracket_number"] == ["\n                                \n                                  \n                                    4\n                                  \n                                    \n                              "]
+        assert i["favorite"] == ["\xa0"]
+        assert i["payoff"] == ["¥410"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/raceresult?rno=5&jcd=01&hd=20230817#payoff"]
 
 
 class RacerProfileContract(Contract):
