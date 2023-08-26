@@ -41,9 +41,7 @@ jobs:
           context: .
           file: ./Dockerfile.production
           push: true
-          tags: |
-            # TODO: ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
-            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
+          tags: ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
 
       # Slack notification
       - name: Slack notification on success
