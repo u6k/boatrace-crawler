@@ -2,6 +2,7 @@ name: build and push
 
 on:
   push:
+    # TODO
     # branches:
     #   - main
 
@@ -41,7 +42,7 @@ jobs:
           file: ./Dockerfile.production
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+            # TODO: ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
             ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_VERSION }}
 
       # Slack notification
