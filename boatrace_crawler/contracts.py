@@ -4,7 +4,7 @@ from scrapy.contracts import Contract
 from scrapy.exceptions import ContractFail
 from scrapy.http import Request
 
-from boatrace_crawler.items import OddsItem, RaceIndexItem, RaceProgramBracketItem, RaceProgramBracketResultsItem, RaceProgramItem, RaceResultPayoffItem, RaceResultStartTimeItem, RaceResultTimeItem
+from boatrace_crawler.items import OddsItem, RaceIndexItem, RaceProgramBracketItem, RaceProgramBracketResultsItem, RaceProgramItem, RaceResultPayoffItem, RaceResultStartTimeItem, RaceResultTimeItem, RacerItem
 
 
 class CalendarContract(Contract):
@@ -620,4 +620,23 @@ class RacerProfileContract(Contract):
     name = "racer_profile_contract"
 
     def post_process(self, output):
-        pass
+        #
+        # Check items
+        #
+        items = list(filter(lambda o: isinstance(o, RacerItem), output))
+
+        assert len(items) == 1
+
+        i = items[0]
+        assert i["belong_to"] == ["福岡"]
+        assert i["birth_day"] == ["1986/05/26"]
+        assert i["birth_place"] == ["福岡県"]
+        assert i["blood_type"] == ["B型"]
+        assert i["debut_period"] == ["101期"]
+        assert i["height"] == ["166cm"]
+        assert i["name"] == ["三苫\u3000\u3000晃幸"]
+        assert i["name_kana"] == ["ミトマ\u3000テルユキ"]
+        assert i["racer_class"] == ["A2級"]
+        assert i["racer_id"] == ["4463"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/data/racersearch/profile?toban=4463"]
+        assert i["weight"] == ["55kg"]

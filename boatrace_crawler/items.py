@@ -71,3 +71,18 @@ class RaceResultPayoffItem(Item):
     bracket_number = Field()
     payoff = Field()
     favorite = Field()
+
+
+class RacerItem(Item):
+    url = Field()
+    name = Field()
+    name_kana = Field()
+    racer_id = Field()
+    birth_day = Field()
+    height = Field()
+    weight = Field()
+    blood_type = Field()
+    belong_to = Field()
+    birth_place = Field()
+    debut_period = Field()
+    racer_class = Field()

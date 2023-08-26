@@ -3,7 +3,7 @@ from urllib.parse import parse_qs, urlparse
 import scrapy
 from scrapy.loader import ItemLoader
 
-from boatrace_crawler.items import OddsItem, RaceIndexItem, RaceProgramBracketItem, RaceProgramBracketResultsItem, RaceProgramItem, RaceResultPayoffItem, RaceResultStartTimeItem, RaceResultTimeItem
+from boatrace_crawler.items import OddsItem, RaceIndexItem, RaceProgramBracketItem, RaceProgramBracketResultsItem, RaceProgramItem, RaceResultPayoffItem, RaceResultStartTimeItem, RaceResultTimeItem, RacerItem
 
 
 class BoatraceSpider(scrapy.Spider):
@@ -546,8 +546,27 @@ class BoatraceSpider(scrapy.Spider):
         """Parse racer profile page.
 
         @url https://www.boatrace.jp/owpc/pc/data/racersearch/profile?toban=4463
-        @returns items 0 0
+        @returns items 1 1
         @returns requests 0 0
         @racer_profile_contract
         """
         self.logger.info(f"#parse_racer_profile: start: response={response.url}")
+
+        loader = ItemLoader(item=RacerItem(), selector=response)
+        loader.add_value("url", response.url)
+        loader.add_xpath("name", "//p[@class='racer1_bodyName']/text()")
+        loader.add_xpath("name_kana", "//p[@class='racer1_bodyKana']/text()")
+        loader.add_xpath("racer_id", "//dl[@class='list3']/dd[1]/text()")
+        loader.add_xpath("birth_day", "//dl[@class='list3']/dd[2]/text()")
+        loader.add_xpath("height", "//dl[@class='list3']/dd[3]/text()")
+        loader.add_xpath("weight", "//dl[@class='list3']/dd[4]/text()")
+        loader.add_xpath("blood_type", "//dl[@class='list3']/dd[5]/text()")
+        loader.add_xpath("belong_to", "//dl[@class='list3']/dd[6]/text()")
+        loader.add_xpath("birth_place", "//dl[@class='list3']/dd[7]/text()")
+        loader.add_xpath("debut_period", "//dl[@class='list3']/dd[8]/text()")
+        loader.add_xpath("racer_class", "//dl[@class='list3']/dd[9]/text()")
+
+        item = loader.load_item()
+
+        self.logger.debug(f"#parse_racer_profile: racer={item}")
+        yield item
