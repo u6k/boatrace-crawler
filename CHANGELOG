@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- [#10068: レース情報のURLに#infoを付与する](https://redmine.u6k.me/issues/10068)
+
+## [1.0.0] - 2023-08-27
+
 ### Added
 
 - [#10038: リポジトリを立ち上げる](https://redmine.u6k.me/issues/10038)
