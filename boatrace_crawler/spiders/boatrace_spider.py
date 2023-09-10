@@ -476,16 +476,22 @@ class BoatraceSpider(scrapy.Spider):
         """Parse race result page.
 
         @url https://www.boatrace.jp/owpc/pc/race/raceresult?rno=5&jcd=01&hd=20230817
+        TODO: 中止となったレース結果 @url https://www.boatrace.jp/owpc/pc/race/raceresult?rno=12&jcd=24&hd=20221223
         @returns items 22 22
         @returns requests 0 0
         @race_result_contract
         """
         self.logger.info(f"#parse_race_result: start: response={response.url}")
 
-        # 着順
-        table = response.xpath("//div[@class='table1']/table")[0]
+        tables = response.xpath("//div[@class='table1']/table")
 
-        for tbody in table.xpath("tbody"):
+        if len(tables) == 0:
+            # レース中止になった場合、何もせずに戻る
+            self.logger.debug("#parse_race_result: canceled")
+            return
+
+        # 着順
+        for tbody in tables[0].xpath("tbody"):
             loader = ItemLoader(item=RaceResultTimeItem(), selector=tbody)
             loader.add_value("url", response.url + "#result")
             loader.add_xpath("result", "tr/td[1]/text()")
@@ -498,9 +504,7 @@ class BoatraceSpider(scrapy.Spider):
             yield item
 
         # スタート情報
-        table = response.xpath("//div[@class='table1']/table")[1]
-
-        for tr in table.xpath("tbody/tr"):
+        for tr in tables[1].xpath("tbody/tr"):
             loader = ItemLoader(item=RaceResultStartTimeItem(), selector=tr)
             loader.add_value("url", response.url + "#start")
             loader.add_xpath("bracket_number", "td/div/span[1]/text()")
@@ -512,11 +516,9 @@ class BoatraceSpider(scrapy.Spider):
             yield item
 
         # 払い戻し情報
-        table = response.xpath("//div[@class='table1']/table")[2]
-
         bet_type = ""
 
-        for tr in table.xpath("tbody/tr"):
+        for tr in tables[2].xpath("tbody/tr"):
             loader = ItemLoader(item=RaceResultPayoffItem(), selector=tr)
             loader.add_value("url", response.url + "#payoff")
 
