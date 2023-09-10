@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [#10070: IndexError: list index out of range](https://redmine.u6k.me/issues/10070)
 - [#10071: KeyError: 'bracket_number_2'](https://redmine.u6k.me/issues/10071)
 
+### Added
+
+- [#10069: 当日レース一覧ページをクロールする](https://redmine.u6k.me/issues/10069)
+
 ## [1.0.0] - 2023-08-27
 
 ### Added
