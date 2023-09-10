@@ -36,6 +36,10 @@ class BoatraceSpider(scrapy.Spider):
             self.logger.debug("#_follow: follow calendar page")
             return scrapy.Request(url, callback=self.parse_calendar, meta=meta)
 
+        elif url.startswith("https://www.boatrace.jp/owpc/pc/race/index?"):
+            self.logger.debug("#_follow: follow oneday race page")
+            return scrapy.Request(url, callback=self.parse_oneday_race, meta=meta)
+
         elif url.startswith("https://www.boatrace.jp/owpc/pc/race/raceindex?"):
             self.logger.debug("#_follow: follow race index page")
             return scrapy.Request(url, callback=self.parse_race_index, meta=meta)
@@ -95,6 +99,27 @@ class BoatraceSpider(scrapy.Spider):
 
                 race_index_url = f"https://www.boatrace.jp/owpc/pc/race/raceindex?jcd={race_index_qs['jcd'][0]}&hd={race_index_qs['hd'][0]}"
                 yield self._follow(race_index_url)
+
+    def parse_oneday_race(self, response):
+        """Parse oneday race page.
+
+        @url https://www.boatrace.jp/owpc/pc/race/index?hd=20230909
+        @returns items 0 0
+        @returns requests 144
+        @oneday_race_contract
+        """
+        self.logger.info(f"#parse_oneday_race: start: response={response.url}")
+
+        for a in response.xpath("//div[@class='table1']/table/tbody/tr/td/a"):
+            url = urlparse(response.urljoin(a.xpath("@href").get()))
+            qs = parse_qs(url.query)
+
+            if url.path == "/owpc/pc/race/raceindex" and "hd" in qs and "jcd" in qs:
+                self.logger.debug(f"#parse_oneday_race: a={url.geturl()}")
+
+                for rno in range(12):
+                    racelist_url = f"https://www.boatrace.jp/owpc/pc/race/racelist?rno={rno+1}&jcd={qs['jcd'][0]}&hd={qs['hd'][0]}"
+                    yield self._follow(racelist_url)
 
     def parse_race_index(self, response):
         """Parse race index page.

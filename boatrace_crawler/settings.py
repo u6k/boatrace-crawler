@@ -24,6 +24,7 @@ HTTPCACHE_STORAGE = "boatrace_crawler.middlewares.S3CacheStorage"
 
 SPIDER_CONTRACTS = {
     "boatrace_crawler.contracts.CalendarContract": 10,
+    "boatrace_crawler.contracts.OnedayRaceContract": 10,
     "boatrace_crawler.contracts.RaceIndexContract": 10,
     "boatrace_crawler.contracts.RaceProgramContract": 10,
     "boatrace_crawler.contracts.Odds3tContract": 10,
