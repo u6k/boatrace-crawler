@@ -24,6 +24,23 @@ class CalendarContract(Contract):
             raise ContractFail(f"Unknown request: url={r.url}")
 
 
+class OnedayRaceContract(Contract):
+    name = "oneday_race_contract"
+
+    def post_process(self, output):
+        # Check requests
+        requests = list(filter(lambda o: isinstance(o, Request), output))
+
+        for r in requests:
+            url = urlparse(r.url)
+            qs = parse_qs(url.query)
+
+            if url.path == "/owpc/pc/race/racelist" and "rno" in qs and "jcd" in qs and "hd" in qs:
+                continue
+
+            raise ContractFail(f"Unknown request: url={r.url}")
+
+
 class RaceIndexContract(Contract):
     name = "race_index_contract"
 
@@ -75,7 +92,7 @@ class RaceProgramContract(Contract):
         i = items[0]
         assert i["course_length"] == ["一般\u3000\u3000\u3000\u3000\u30001800m"]
         assert i["start_time"] == ["17:01"]
-        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/racelist?rno=5&jcd=01&hd=20230817"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/racelist?rno=5&jcd=01&hd=20230817#info"]
 
         items = list(filter(lambda o: isinstance(o, RaceProgramBracketItem), output))
 

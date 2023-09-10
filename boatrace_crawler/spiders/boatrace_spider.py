@@ -36,6 +36,10 @@ class BoatraceSpider(scrapy.Spider):
             self.logger.debug("#_follow: follow calendar page")
             return scrapy.Request(url, callback=self.parse_calendar, meta=meta)
 
+        elif url.startswith("https://www.boatrace.jp/owpc/pc/race/index?"):
+            self.logger.debug("#_follow: follow oneday race page")
+            return scrapy.Request(url, callback=self.parse_oneday_race, meta=meta)
+
         elif url.startswith("https://www.boatrace.jp/owpc/pc/race/raceindex?"):
             self.logger.debug("#_follow: follow race index page")
             return scrapy.Request(url, callback=self.parse_race_index, meta=meta)
@@ -95,6 +99,27 @@ class BoatraceSpider(scrapy.Spider):
 
                 race_index_url = f"https://www.boatrace.jp/owpc/pc/race/raceindex?jcd={race_index_qs['jcd'][0]}&hd={race_index_qs['hd'][0]}"
                 yield self._follow(race_index_url)
+
+    def parse_oneday_race(self, response):
+        """Parse oneday race page.
+
+        @url https://www.boatrace.jp/owpc/pc/race/index?hd=20230909
+        @returns items 0 0
+        @returns requests 144
+        @oneday_race_contract
+        """
+        self.logger.info(f"#parse_oneday_race: start: response={response.url}")
+
+        for a in response.xpath("//div[@class='table1']/table/tbody/tr/td/a"):
+            url = urlparse(response.urljoin(a.xpath("@href").get()))
+            qs = parse_qs(url.query)
+
+            if url.path == "/owpc/pc/race/raceindex" and "hd" in qs and "jcd" in qs:
+                self.logger.debug(f"#parse_oneday_race: a={url.geturl()}")
+
+                for rno in range(12):
+                    racelist_url = f"https://www.boatrace.jp/owpc/pc/race/racelist?rno={rno+1}&jcd={qs['jcd'][0]}&hd={qs['hd'][0]}"
+                    yield self._follow(racelist_url)
 
     def parse_race_index(self, response):
         """Parse race index page.
@@ -165,7 +190,7 @@ class BoatraceSpider(scrapy.Spider):
         # レース出走表を構築する
         #
         loader = ItemLoader(item=RaceProgramItem(), response=response)
-        loader.add_value("url", response.url)
+        loader.add_value("url", response.url + "#info")
         loader.add_xpath("course_length", "translate(normalize-space(//h3[@class='title16_titleDetail__add2020']), ' ', '')")
 
         # 出走時刻を抽出する
@@ -272,18 +297,19 @@ class BoatraceSpider(scrapy.Spider):
         """Parse odds 3t page.
 
         @url https://www.boatrace.jp/owpc/pc/race/odds3t?rno=5&jcd=01&hd=20230817
+        NOTE: レース中止 @url https://www.boatrace.jp/owpc/pc/race/oddsk?rno=12&jcd=24&hd=20221223
         @returns items 120 120
         @returns requests 0 0
         @odds_3t_contract
         """
         self.logger.info(f"#parse_odds_3t: start: response={response.url}")
 
-        if response.xpath("//h3[contains(@class, 'title12_title') and contains(text(), 'データはありません。')]"):
-            # データがない場合は処理を戻す
+        table = response.xpath("//div[@class='table1']/table")
+
+        if len(table) == 0:
+            # レース中止などでデータがない場合、何もせずに処理を戻す
             self.logger.debug("#parse_odds_3t: no data")
             return
-
-        table = response.xpath("//div[@class='table1']/table")
 
         for i in range(6):
             bracket_number_1 = table.xpath(f"thead/tr/th[{i*2+1}]/text()").get()
@@ -315,6 +341,7 @@ class BoatraceSpider(scrapy.Spider):
         """Parse odds 3f page.
 
         @url https://www.boatrace.jp/owpc/pc/race/odds3f?rno=5&jcd=01&hd=20230817
+        NOTE: レース中止 @url https://www.boatrace.jp/owpc/pc/race/odds3f?rno=12&jcd=24&hd=20221223
         @returns items 20 20
         @returns requests 0 0
         @odds_3f_contract
@@ -322,6 +349,11 @@ class BoatraceSpider(scrapy.Spider):
         self.logger.info(f"#parse_odds_3f: start: response={response.url}")
 
         table = response.xpath("//div[@class='table1']/table")
+
+        if len(table) == 0:
+            # レース中止などでデータがない場合、何もせずに処理を戻す
+            self.logger.debug("#parse_odds_3f: no data")
+            return
 
         def load_odds_item(bracket_number_1, bracket_number_2, bracket_number_3, table_row, table_col):
             odds = table.xpath(f"tbody/tr[{table_row}]/td[{table_col}]/text()").get()
@@ -363,6 +395,7 @@ class BoatraceSpider(scrapy.Spider):
         """Parse odds 2tf page.
 
         @url https://www.boatrace.jp/owpc/pc/race/odds2tf?rno=5&jcd=01&hd=20230817
+        NOTE: レース中止 @url https://www.boatrace.jp/owpc/pc/race/odds2tf?rno=12&jcd=24&hd=20221223
         @returns items 45 45
         @returns requests 0 0
         @odds_2tf_contract
@@ -371,6 +404,11 @@ class BoatraceSpider(scrapy.Spider):
 
         # 2連単オッズをパースする
         table = response.xpath("//div[@class='table1'][1]/table")
+
+        if len(table) == 0:
+            # レース中止などでデータがない場合、何もせずに処理を戻す
+            self.logger.debug("#parse_odds_2tf: no data")
+            return
 
         for i in range(6):
             for j in range(5):
@@ -409,6 +447,7 @@ class BoatraceSpider(scrapy.Spider):
         """Parse odds k page.
 
         @url https://www.boatrace.jp/owpc/pc/race/oddsk?rno=5&jcd=01&hd=20230817
+        NOTE: レース中止 @url https://www.boatrace.jp/owpc/pc/race/oddsk?rno=12&jcd=24&hd=20221223
         @returns items 15 15
         @returns requests 0 0
         @odds_k_contract
@@ -416,6 +455,11 @@ class BoatraceSpider(scrapy.Spider):
         self.logger.info(f"#parse_odds_k: start: response={response.url}")
 
         table = response.xpath("//div[@class='table1'][1]/table")
+
+        if len(table) == 0:
+            # レース中止などでデータがない場合、何もせずに処理を戻す
+            self.logger.debug("#parse_odds_k: no data")
+            return
 
         for i in range(6):
             for j in range(5):
@@ -438,6 +482,7 @@ class BoatraceSpider(scrapy.Spider):
         """Parse odds tf page.
 
         @url https://www.boatrace.jp/owpc/pc/race/oddstf?rno=5&jcd=01&hd=20230817
+        NOTE: レース中止 @url https://www.boatrace.jp/owpc/pc/race/oddstf?rno=12&jcd=24&hd=20221223
         @returns items 12 12
         @returns requests 0 0
         @odds_tf_contract
@@ -446,6 +491,11 @@ class BoatraceSpider(scrapy.Spider):
 
         # 単勝オッズをパースする
         table = response.xpath("//div[@class='grid_unit'][1]/div[@class='table1']/table")
+
+        if len(table) == 0:
+            # レース中止などでデータがない場合、何もせずに処理を戻す
+            self.logger.debug("#parse_odds_tf: no data")
+            return
 
         for i in range(6):
             loader = ItemLoader(item=OddsItem(), selector=table)
@@ -476,16 +526,22 @@ class BoatraceSpider(scrapy.Spider):
         """Parse race result page.
 
         @url https://www.boatrace.jp/owpc/pc/race/raceresult?rno=5&jcd=01&hd=20230817
+        NOTE: レース中止 @url https://www.boatrace.jp/owpc/pc/race/raceresult?rno=12&jcd=24&hd=20221223
         @returns items 22 22
         @returns requests 0 0
         @race_result_contract
         """
         self.logger.info(f"#parse_race_result: start: response={response.url}")
 
-        # 着順
-        table = response.xpath("//div[@class='table1']/table")[0]
+        tables = response.xpath("//div[@class='table1']/table")
 
-        for tbody in table.xpath("tbody"):
+        if len(tables) == 0:
+            # レース中止になった場合、何もせずに戻る
+            self.logger.debug("#parse_race_result: no data")
+            return
+
+        # 着順
+        for tbody in tables[0].xpath("tbody"):
             loader = ItemLoader(item=RaceResultTimeItem(), selector=tbody)
             loader.add_value("url", response.url + "#result")
             loader.add_xpath("result", "tr/td[1]/text()")
@@ -498,9 +554,7 @@ class BoatraceSpider(scrapy.Spider):
             yield item
 
         # スタート情報
-        table = response.xpath("//div[@class='table1']/table")[1]
-
-        for tr in table.xpath("tbody/tr"):
+        for tr in tables[1].xpath("tbody/tr"):
             loader = ItemLoader(item=RaceResultStartTimeItem(), selector=tr)
             loader.add_value("url", response.url + "#start")
             loader.add_xpath("bracket_number", "td/div/span[1]/text()")
@@ -512,11 +566,9 @@ class BoatraceSpider(scrapy.Spider):
             yield item
 
         # 払い戻し情報
-        table = response.xpath("//div[@class='table1']/table")[2]
-
         bet_type = ""
 
-        for tr in table.xpath("tbody/tr"):
+        for tr in tables[2].xpath("tbody/tr"):
             loader = ItemLoader(item=RaceResultPayoffItem(), selector=tr)
             loader.add_value("url", response.url + "#payoff")
 
