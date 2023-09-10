@@ -165,7 +165,7 @@ class BoatraceSpider(scrapy.Spider):
         # レース出走表を構築する
         #
         loader = ItemLoader(item=RaceProgramItem(), response=response)
-        loader.add_value("url", response.url)
+        loader.add_value("url", response.url + "#info")
         loader.add_xpath("course_length", "translate(normalize-space(//h3[@class='title16_titleDetail__add2020']), ' ', '')")
 
         # 出走時刻を抽出する

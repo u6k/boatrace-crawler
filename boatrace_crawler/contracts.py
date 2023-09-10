@@ -75,7 +75,7 @@ class RaceProgramContract(Contract):
         i = items[0]
         assert i["course_length"] == ["一般\u3000\u3000\u3000\u3000\u30001800m"]
         assert i["start_time"] == ["17:01"]
-        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/racelist?rno=5&jcd=01&hd=20230817"]
+        assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/racelist?rno=5&jcd=01&hd=20230817#info"]
 
         items = list(filter(lambda o: isinstance(o, RaceProgramBracketItem), output))
 
