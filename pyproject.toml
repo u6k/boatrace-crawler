@@ -39,5 +39,6 @@ line_length = 1000
 [tool.poe.tasks]
 lint = "pflake8 ./boatrace_crawler/ ./tests/"
 fix = [{cmd="black ./boatrace_crawler/ ./tests/"}, {cmd="isort ./boatrace_crawler/ ./tests/"}]
-test = [{cmd="scrapy check boatrace_spider -L DEBUG"}]
+test = [{cmd="scrapy check boatrace_spider -L DEBUG"}, {cmd="scrapy check orangebuoy_spider -L DEBUG"}]
 crawl = "scrapy crawl boatrace_spider"
+crawl_pastodds = "scrapy crawl orangebuoy_spider"

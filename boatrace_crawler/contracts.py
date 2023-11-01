@@ -657,3 +657,64 @@ class RacerProfileContract(Contract):
         assert i["racer_id"] == ["4463"]
         assert i["url"] == ["https://www.boatrace.jp/owpc/pc/data/racersearch/profile?toban=4463"]
         assert i["weight"] == ["55kg"]
+
+
+class OrangebuoyMonthContract(Contract):
+    name = "orangebuoy_month_contract"
+
+    def post_process(self, output):
+        requests = list(filter(lambda o: isinstance(o, Request), output))
+
+        for r in requests:
+            url = urlparse(r.url)
+            qs = parse_qs(url.query)
+
+            if url.path == "/odds/" and "year" in qs and "month" in qs and "day" in qs and "jyo" not in qs and "r" not in qs and "mode" not in qs:
+                continue
+
+            raise ContractFail(f"Unknown request: url={r.url}")
+
+
+class OrangebuoyDayContract(Contract):
+    name = "orangebuoy_day_contract"
+
+    def post_process(self, output):
+        requests = list(filter(lambda o: isinstance(o, Request), output))
+
+        for r in requests:
+            url = urlparse(r.url)
+            qs = parse_qs(url.query)
+
+            if url.path == "/odds/" and "year" in qs and "month" in qs and "day" in qs and "jyo" in qs and "r" not in qs and "mode" not in qs:
+                continue
+
+            raise ContractFail(f"Unknown request: url={r.url}")
+
+
+class OrangebuoyPlaceContract(Contract):
+    name = "orangebuoy_place_contract"
+
+    def post_process(self, output):
+        requests = list(filter(lambda o: isinstance(o, Request), output))
+
+        for r in requests:
+            url = urlparse(r.url)
+            qs = parse_qs(url.query)
+
+            if url.path == "/odds/" and "year" in qs and "month" in qs and "day" in qs and "jyo" in qs and "r" in qs and "mode" in qs:
+                continue
+
+            raise ContractFail(f"Unknown request: url={r.url}")
+
+
+class OrangebuoyOddsContract(Contract):
+    name = "orangebuoy_odds_contract"
+
+    def post_process(self, output):
+        list_odds = list(filter(lambda o: isinstance(o, OddsItem), output))
+
+        for odds in list_odds:
+            if odds["bracket_number_1"][0] is not None and odds["odds"][0] is not None:
+                continue
+
+            raise ContractFail(f"Unknown odds: odds={odds}")
