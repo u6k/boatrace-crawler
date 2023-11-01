@@ -23,7 +23,9 @@ jobs:
       - name: Lint
         run: docker-compose run app poe lint
       - name: Test
-        run: docker-compose run app poe test
+        run: |
+          docker-compose run app poe test
+          docker-compose run app poe test_pastodds
       - name: Login to GitHub Container Repository
         uses: docker/login-action@v2
         with:
