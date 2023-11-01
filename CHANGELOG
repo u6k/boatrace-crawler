@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- [#10175: テストやクロールをプロキシ経由で実行する](https://redmine.u6k.me/issues/10175)
+
 ### Added
 
 - [#10164: 過去レースのオッズをクロールする](https://redmine.u6k.me/issues/10164)
