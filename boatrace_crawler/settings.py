@@ -34,6 +34,10 @@ SPIDER_CONTRACTS = {
     "boatrace_crawler.contracts.OddstfContract": 10,
     "boatrace_crawler.contracts.RaceResultContract": 10,
     "boatrace_crawler.contracts.RacerProfileContract": 10,
+    "boatrace_crawler.contracts.OrangebuoyMonthContract": 10,
+    "boatrace_crawler.contracts.OrangebuoyDayContract": 10,
+    "boatrace_crawler.contracts.OrangebuoyPlaceContract": 10,
+    "boatrace_crawler.contracts.OrangebuoyOddsContract": 10,
 }
 
 # Set settings whose default value is deprecated to a future-proof value
