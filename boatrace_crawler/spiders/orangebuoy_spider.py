@@ -16,6 +16,10 @@ class OrangebuoySpider(scrapy.Spider):
 
         self.start_urls = [start_url]
 
+    def start_requests(self):
+        for url in self.start_urls:
+            yield self._follow(url)
+
     def parse(self, response):
         """Parse start_url."""
         self.logger.info(f"#parse: start: response={response.url}")
