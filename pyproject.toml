@@ -44,3 +44,4 @@ test = {cmd="bin/scrapy_proxy.sh check boatrace_spider -L DEBUG"}
 test_pastodds = {cmd="bin/scrapy_proxy.sh check orangebuoy_spider -L DEBUG"}
 crawl = {cmd="bin/scrapy_proxy.sh crawl boatrace_spider"}
 crawl_pastodds = {cmd="bin/scrapy_proxy.sh crawl orangebuoy_spider"}
+create_racelist = "python boatrace_crawler/main.py --task create_racelist"

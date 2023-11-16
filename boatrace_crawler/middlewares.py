@@ -28,20 +28,35 @@ class S3Client:
             self.s3_bucket_obj.create()
 
     def get(self, key):
-        s3_obj = self.s3_bucket_obj.Object(key)
+        data_bytes = self.get_bytes(key)
 
-        try:
-            with io.BytesIO(s3_obj.get()["Body"].read()) as b:
+        if data_bytes is not None:
+            with io.BytesIO(data_bytes) as b:
                 data = joblib.load(b)
-        except ClientError as err:
-            if err.response["Error"]["Code"] == "404" or err.response["Error"]["Code"] == "NoSuchKey":
-                data = None
-            else:
-                raise err
+        else:
+            data = None
 
         return data
 
-    def put(self, key, data_bytes):
+    def get_bytes(self, key):
+        s3_obj = self.s3_bucket_obj.Object(key)
+
+        try:
+            data_bytes = s3_obj.get()["Body"].read()
+        except ClientError as err:
+            if err.response["Error"]["Code"] == "404" or err.response["Error"]["Code"] == "NoSuchKey":
+                data_bytes = None
+            else:
+                raise err
+
+        return data_bytes
+
+    def put(self, key, data):
+        with io.BytesIO() as b:
+            joblib.dump(data, b, compress=True)
+            self.s3_bucket_obj.Object(key).put(Body=b.getvalue())
+
+    def put_bytes(self, key, data_bytes):
         self.s3_bucket_obj.Object(key).put(Body=data_bytes)
 
 
@@ -115,10 +130,7 @@ class S3CacheStorage:
             },
         }
 
-        with io.BytesIO() as b:
-            joblib.dump(data, b, compress=True)
-
-            self.s3_client.put(rpath + ".joblib", b.getvalue())
+        self.s3_client.put(rpath + ".joblib", data)
 
     def _get_request_path(self, spider, request):
         key = self._fingerprinter.fingerprint(request).hex()
