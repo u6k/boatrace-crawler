@@ -14,24 +14,47 @@ from scrapy.http import Headers
 from scrapy.responsetypes import responsetypes
 
 
-class S3CacheStorage:
+class S3Client:
     def __init__(self, settings):
-        # Store parameters
         self.s3_endpoint = settings["AWS_ENDPOINT_URL"]
         self.s3_access_key = settings["AWS_ACCESS_KEY_ID"]
         self.s3_secret_key = settings["AWS_SECRET_ACCESS_KEY"]
         self.s3_bucket = settings["AWS_S3_CACHE_BUCKET"]
+
+        self.s3_client = boto3.resource("s3", endpoint_url=self.s3_endpoint, aws_access_key_id=self.s3_access_key, aws_secret_access_key=self.s3_secret_key)
+
+        self.s3_bucket_obj = self.s3_client.Bucket(self.s3_bucket)
+        if not self.s3_bucket_obj.creation_date:
+            self.s3_bucket_obj.create()
+
+    def get(self, key):
+        s3_obj = self.s3_bucket_obj.Object(key)
+
+        try:
+            with io.BytesIO(s3_obj.get()["Body"].read()) as b:
+                data = joblib.load(b)
+        except ClientError as err:
+            if err.response["Error"]["Code"] == "404" or err.response["Error"]["Code"] == "NoSuchKey":
+                data = None
+            else:
+                raise err
+
+        return data
+
+    def put(self, key, data_bytes):
+        self.s3_bucket_obj.Object(key).put(Body=data_bytes)
+
+
+class S3CacheStorage:
+    def __init__(self, settings):
+        # Store parameters
         self.s3_folder = settings["AWS_S3_CACHE_FOLDER"]
 
         self.recache_race = settings["RECACHE_RACE"]
         self.recache_data = settings["RECACHE_DATA"]
 
         # Setup s3 client
-        self.s3_client = boto3.resource("s3", endpoint_url=self.s3_endpoint, aws_access_key_id=self.s3_access_key, aws_secret_access_key=self.s3_secret_key)
-
-        self.s3_bucket_obj = self.s3_client.Bucket(self.s3_bucket)
-        if not self.s3_bucket_obj.creation_date:
-            self.s3_bucket_obj.create()
+        self.s3_client = S3Client(settings)
 
     def open_spider(self, spider):
         self._fingerprinter = spider.crawler.request_fingerprinter
@@ -55,17 +78,10 @@ class S3CacheStorage:
         rpath = self._get_request_path(spider, request)
         spider.logger.debug(f"#retrieve_response: cache path={rpath}")
 
-        s3_obj = self.s3_bucket_obj.Object(rpath + ".joblib")
-
-        try:
-            with io.BytesIO(s3_obj.get()["Body"].read()) as b:
-                data = joblib.load(b)
-        except ClientError as err:
-            if err.response["Error"]["Code"] == "404" or err.response["Error"]["Code"] == "NoSuchKey":
-                spider.logger.debug("#retrieve_response: cache not found")
-                return
-            else:
-                raise err
+        data = self.s3_client.get(rpath + ".joblib")
+        if data is None:
+            spider.logger.debug("#retrieve_response: cache not found")
+            return
 
         url = data["response"]["url"]
         status = data["response"]["status"]
@@ -101,7 +117,8 @@ class S3CacheStorage:
 
         with io.BytesIO() as b:
             joblib.dump(data, b, compress=True)
-            self.s3_bucket_obj.Object(rpath + ".joblib").put(Body=b.getvalue())
+
+            self.s3_client.put(rpath + ".joblib", b.getvalue())
 
     def _get_request_path(self, spider, request):
         key = self._fingerprinter.fingerprint(request).hex()
