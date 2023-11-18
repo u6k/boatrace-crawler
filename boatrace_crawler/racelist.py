@@ -2,7 +2,9 @@ import io
 import json
 import logging
 import logging.config
+import os
 import re
+import subprocess
 import warnings
 from datetime import datetime, timedelta
 
@@ -38,7 +40,7 @@ def get_feed(s3_client, feed_url):
 
 
 def get_racelist(s3_client, racelist_folder, target_date):
-    key = f"{racelist_folder}/racelist_{target_date.strftime('%Y%m%d')}.joblib"
+    key = f"{racelist_folder}/{target_date.strftime('%Y%m%d')}/df_racelist.joblib"
 
     df = s3_client.get(key)
 
@@ -46,7 +48,7 @@ def get_racelist(s3_client, racelist_folder, target_date):
 
 
 def put_racelist(s3_client, df_arg, racelist_folder, target_date):
-    key_base = f"{racelist_folder}/racelist_{target_date.strftime('%Y%m%d')}"
+    key_base = f"{racelist_folder}/{target_date.strftime('%Y%m%d')}/df_racelist"
 
     with io.BytesIO() as b:
         df_arg.to_csv(b)
@@ -56,6 +58,11 @@ def put_racelist(s3_client, df_arg, racelist_folder, target_date):
     s3_client.put(key_base + ".joblib", df_arg)
 
     return key_base + ".joblib"
+
+
+#
+# レースデータ
+#
 
 
 def extract_racelist(df_race_info, target_date):
@@ -78,7 +85,7 @@ def extract_racelist(df_race_info, target_date):
     df["crawl_timestamp_before_15min"] = None
     df["crawl_timestamp_before_10min"] = None
     df["crawl_timestamp_before_5min"] = None
-    df["crawl_timestamp_after"] = None
+    df["crawl_timestamp_before_2min"] = None
 
     df = df.astype(
         {
@@ -87,11 +94,38 @@ def extract_racelist(df_race_info, target_date):
             "crawl_timestamp_before_15min": "datetime64[ns]",
             "crawl_timestamp_before_10min": "datetime64[ns]",
             "crawl_timestamp_before_5min": "datetime64[ns]",
-            "crawl_timestamp_after": "datetime64[ns]",
+            "crawl_timestamp_before_2min": "datetime64[ns]",
         }
     )
 
     return df
+
+
+def crawl_race(race_item, file_suffix):
+    L = get_logger("crawl_race")
+
+    L.debug(f"race_item={race_item}")
+    L.debug(f"file_suffix={file_suffix}")
+
+    # パラメーターを構築する
+    start_url = f"https://www.boatrace.jp/owpc/pc/race/racelist?rno={race_item['race_round']}&jcd={race_item['place_id']}&hd={race_item['start_datetime'].strftime('%Y%m%d')}"
+
+    env = os.environ.copy()
+    env["AWS_S3_FEED_URL"] = f"s3://{env['AWS_S3_CACHE_BUCKET']}/{env['AWS_S3_RACELIST_FOLDER']}/{race_item['start_datetime'].strftime('%Y%m%d')}/race_{race_item['race_id']}_{file_suffix}.json"
+    env["RECACHE_RACE"] = "True"
+    env["RECACHE_DATA"] = "False"
+    del env["CRAWL_HTTP_PROXY"]
+
+    L.debug(f"start_url={start_url}")
+    L.debug(f"env={env}")
+
+    # クロールプロセスを起動する
+    proc = subprocess.run(["scrapy", "crawl", "boatrace_spider", "-a", f"start_url={start_url}"], env=env, capture_output=True, text=True)
+
+    L.debug(f"stdout={proc.stdout}")
+    L.debug(f"stderr={proc.stderr}")
+
+    return proc.returncode
 
 
 #
