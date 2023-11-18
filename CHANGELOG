@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - [#10165: 当日レース一覧を、当日クロールデータから作成する](https://redmine.u6k.me/issues/10165)
+- [#10166: 投票締切りの30,20,15,10,5,2分前にクロールする](https://redmine.u6k.me/issues/10166)
 
 ## [1.2.0] - 2023-11-02
 
