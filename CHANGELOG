@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2023-12-02
+
+### Added
+
+- [#10165: 当日レース一覧を、当日クロールデータから作成する](https://redmine.u6k.me/issues/10165)
+- [#10166: 投票締切りの30,20,15,10,5,2分前にクロールする](https://redmine.u6k.me/issues/10166)
+
 ## [1.2.0] - 2023-11-02
 
 ### Fixed
