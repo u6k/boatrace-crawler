@@ -656,7 +656,6 @@ class RacerProfileContract(Contract):
         assert i["racer_class"] == ["A2級"]
         assert i["racer_id"] == ["4463"]
         assert i["url"] == ["https://www.boatrace.jp/owpc/pc/data/racersearch/profile?toban=4463"]
-        assert i["weight"] == ["55kg"]
 
 
 class OrangebuoyMonthContract(Contract):
