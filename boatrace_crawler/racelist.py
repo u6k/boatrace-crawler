@@ -71,14 +71,12 @@ def extract_racelist(df_race_info, target_date):
 
     df = df_race_info.query(f"'{start_datetime}'<=start_datetime<'{end_datetime}'").sort_values("start_datetime").reset_index(drop=True)
 
-    df = df[
-        [
-            "race_id",
-            "place_id",
-            "race_round",
-            "start_datetime",
-        ]
-    ]
+    df = df[[
+        "race_id",
+        "place_id",
+        "race_round",
+        "start_datetime",
+    ]]
 
     df["crawl_timestamp_before_30min"] = None
     df["crawl_timestamp_before_20min"] = None
@@ -87,16 +85,14 @@ def extract_racelist(df_race_info, target_date):
     df["crawl_timestamp_before_5min"] = None
     df["crawl_timestamp_before_2min"] = None
 
-    df = df.astype(
-        {
-            "crawl_timestamp_before_30min": "datetime64[ns]",
-            "crawl_timestamp_before_20min": "datetime64[ns]",
-            "crawl_timestamp_before_15min": "datetime64[ns]",
-            "crawl_timestamp_before_10min": "datetime64[ns]",
-            "crawl_timestamp_before_5min": "datetime64[ns]",
-            "crawl_timestamp_before_2min": "datetime64[ns]",
-        }
-    )
+    df = df.astype({
+        "crawl_timestamp_before_30min": "datetime64[ns]",
+        "crawl_timestamp_before_20min": "datetime64[ns]",
+        "crawl_timestamp_before_15min": "datetime64[ns]",
+        "crawl_timestamp_before_10min": "datetime64[ns]",
+        "crawl_timestamp_before_5min": "datetime64[ns]",
+        "crawl_timestamp_before_2min": "datetime64[ns]",
+    })
 
     return df
 

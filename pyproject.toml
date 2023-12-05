@@ -13,22 +13,22 @@ scrapy = "^2.10.0"
 boto3 = "^1.28.28"
 joblib = "^1.3.2"
 pandas = "^2.1.3"
+poethepoet = "^0.22.1"
 
 
 [tool.poetry.group.dev.dependencies]
-black = "^23.7.0"
 isort = "^5.12.0"
-poethepoet = "^0.22.0"
 flake8 = "^6.0.0"
 pyproject-flake8 = "^6.0.0.post1"
+autopep8 = "^2.0.4"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 
-[tool.black]
-line-length = 1000
+[tool.autopep8]
+max_line_length = 1000
 
 [tool.flake8]
 max-line-length = 1000
@@ -39,7 +39,7 @@ line_length = 1000
 
 [tool.poe.tasks]
 lint = "pflake8 ./boatrace_crawler/ ./tests/"
-fix = [{cmd="black ./boatrace_crawler/ ./tests/"}, {cmd="isort ./boatrace_crawler/ ./tests/"}]
+fix = [{cmd="autopep8 -ivr ./boatrace_crawler/ ./tests/"}, {cmd="isort ./boatrace_crawler/ ./tests/"}]
 test = {cmd="bin/scrapy_proxy.sh check boatrace_spider -L DEBUG"}
 test_pastodds = {cmd="bin/scrapy_proxy.sh check orangebuoy_spider -L DEBUG"}
 crawl = {cmd="bin/scrapy_proxy.sh crawl boatrace_spider"}
