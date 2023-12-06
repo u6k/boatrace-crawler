@@ -81,6 +81,7 @@ def extract_racelist(df_race_info, target_date):
         "start_datetime": [],
         "crawl_start_datetime": [],
         "crawl_datetime": [],
+        "key": [],
     }
 
     for _, row in df_race_info.iterrows():
@@ -93,6 +94,7 @@ def extract_racelist(df_race_info, target_date):
             dict_racelist["diff_minutes"].append(diff_minutes)
             dict_racelist["crawl_start_datetime"].append(row["start_datetime"] - timedelta(minutes=diff_minutes))
             dict_racelist["crawl_datetime"].append(None)
+            dict_racelist["key"].append(f"{row['race_id']}_before_{diff_minutes}minutes")
 
     df_racelist = pd.DataFrame(dict_racelist) \
         .sort_values(["start_datetime", "crawl_start_datetime"]) \
@@ -104,12 +106,27 @@ def extract_racelist(df_race_info, target_date):
             "start_datetime": "datetime64[ns]",
             "crawl_start_datetime": "datetime64[ns]",
             "crawl_datetime": "datetime64[ns]",
-        })
+        }) \
+        .set_index("key")
 
     return df_racelist
 
 
-def crawl_race(race_item, file_suffix):
+def extract_not_crawl_racelist(df_arg_racelist, arg_crawl_queue, now_datetime):
+    """
+    クロール開始時刻に達した、かつ、クロールキューに存在しないレースを抽出する。
+    """
+
+    # クロールが終了していない、かつ、クロール開始時刻に達したレースを抽出する。
+    df_tmp = df_arg_racelist.query(f"crawl_datetime.isnull() and crawl_start_datetime<='{now_datetime}'")
+
+    # クロールキューに存在するレースをレース一覧から削除する。
+    df_tmp = df_tmp.drop(list(arg_crawl_queue.keys()))
+
+    return df_tmp
+
+
+def crawl_race_subprocess(race_item, file_suffix):
     L = get_logger("crawl_race")
 
     L.debug(f"race_item={race_item}")
@@ -128,12 +145,9 @@ def crawl_race(race_item, file_suffix):
     L.debug(f"env={env}")
 
     # クロールプロセスを起動する
-    proc = subprocess.run(["scrapy", "crawl", "boatrace_spider", "-a", f"start_url={start_url}"], env=env, capture_output=True, text=True)
+    proc = subprocess.Popen(["scrapy", "crawl", "boatrace_spider", "-a", f"start_url={start_url}"], env=env)
 
-    L.debug(f"stdout={proc.stdout}")
-    L.debug(f"stderr={proc.stderr}")
-
-    return proc.returncode
+    return proc
 
 
 #
