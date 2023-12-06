@@ -25,45 +25,39 @@ s3_client = S3Client(settings)
 #
 
 
-def create_racelist():
+def create_racelist(s3_feed_url, target_date, s3_racelist_folder):
     L = racelist.get_logger("create_racelist")
+
+    L.debug(f"s3_feed_url={s3_feed_url}")
+    L.debug(f"target_date={target_date}")
+    L.debug(f"s3_racelist_folder={s3_racelist_folder}")
 
     #
     L.info("# フィードをダウンロード")
     #
 
-    feed_url = os.environ["AWS_S3_FEED_URL"]
-
-    json_data = racelist.get_feed(s3_client, feed_url)
-
-    L.debug(feed_url)
+    json_data = racelist.get_feed(s3_client, s3_feed_url)
+    L.debug(s3_feed_url)
 
     #
     L.info("# フィードを変換")
     #
 
     _, _, df_race_info, _, _, _, _, _ = racelist.parse_feed_json_to_dataframe(json_data)
-
     L.debug(df_race_info)
 
     #
     L.info("# レース一覧を抽出")
     #
 
-    target_date = datetime.strptime(os.environ["RACELIST_DATE"], "%Y-%m-%d")
-
     df_racelist = racelist.extract_racelist(df_race_info, target_date)
-
     L.debug(df_racelist)
 
     #
     L.info("# レース一覧をアップロード")
     #
 
-    racelist_folder = os.environ["AWS_S3_RACELIST_FOLDER"]
-
-    racelist_key = racelist.put_racelist(s3_client, df_racelist, racelist_folder, target_date)
-
+    racelist_key = racelist.put_racelist(s3_client, df_racelist, s3_racelist_folder, target_date)
     L.debug(racelist_key)
 
 
@@ -205,7 +199,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.task == "create_racelist":
-        create_racelist()
+        s3_feed_url = os.environ["AWS_S3_FEED_URL"]
+        target_date = datetime.strptime(os.environ["TARGET_DATE"], "%Y-%m-%d")
+        s3_racelist_folder = os.environ["AWS_S3_RACELIST_FOLDER"]
+
+        create_racelist(s3_feed_url, target_date, s3_racelist_folder)
 
     elif args.task == "crawl_race":
         crawl_race()

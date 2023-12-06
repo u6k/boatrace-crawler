@@ -69,32 +69,44 @@ def extract_racelist(df_race_info, target_date):
     start_datetime = target_date
     end_datetime = start_datetime + timedelta(days=1)
 
-    df = df_race_info.query(f"'{start_datetime}'<=start_datetime<'{end_datetime}'").sort_values("start_datetime").reset_index(drop=True)
+    # 当日レースを抽出する
+    df_race_info = df_race_info.query(f"'{start_datetime}'<=start_datetime<'{end_datetime}'").sort_values("start_datetime").reset_index(drop=True)
 
-    df = df[[
-        "race_id",
-        "place_id",
-        "race_round",
-        "start_datetime",
-    ]]
+    # n分刻みのレース一覧を生成する
+    dict_racelist = {
+        "race_id": [],
+        "diff_minutes": [],
+        "place_id": [],
+        "race_round": [],
+        "start_datetime": [],
+        "crawl_start_datetime": [],
+        "crawl_datetime": [],
+    }
 
-    df["crawl_timestamp_before_30min"] = None
-    df["crawl_timestamp_before_20min"] = None
-    df["crawl_timestamp_before_15min"] = None
-    df["crawl_timestamp_before_10min"] = None
-    df["crawl_timestamp_before_5min"] = None
-    df["crawl_timestamp_before_2min"] = None
+    for _, row in df_race_info.iterrows():
+        for diff_minutes in [30, 20, 15, 10, 5, 2]:
+            dict_racelist["race_id"].append(row["race_id"])
+            dict_racelist["place_id"].append(row["place_id"])
+            dict_racelist["race_round"].append(row["race_round"])
+            dict_racelist["start_datetime"].append(row["start_datetime"])
 
-    df = df.astype({
-        "crawl_timestamp_before_30min": "datetime64[ns]",
-        "crawl_timestamp_before_20min": "datetime64[ns]",
-        "crawl_timestamp_before_15min": "datetime64[ns]",
-        "crawl_timestamp_before_10min": "datetime64[ns]",
-        "crawl_timestamp_before_5min": "datetime64[ns]",
-        "crawl_timestamp_before_2min": "datetime64[ns]",
-    })
+            dict_racelist["diff_minutes"].append(diff_minutes)
+            dict_racelist["crawl_start_datetime"].append(row["start_datetime"] - timedelta(minutes=diff_minutes))
+            dict_racelist["crawl_datetime"].append(None)
 
-    return df
+    df_racelist = pd.DataFrame(dict_racelist) \
+        .sort_values(["start_datetime", "crawl_start_datetime"]) \
+        .astype({
+            "race_id": "str",
+            "diff_minutes": "int",
+            "place_id": "str",
+            "race_round": "int",
+            "start_datetime": "datetime64[ns]",
+            "crawl_start_datetime": "datetime64[ns]",
+            "crawl_datetime": "datetime64[ns]",
+        })
+
+    return df_racelist
 
 
 def crawl_race(race_item, file_suffix):
