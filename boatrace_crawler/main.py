@@ -61,11 +61,9 @@ def create_racelist(s3_feed_url, target_date, s3_racelist_folder):
     L.debug(racelist_key)
 
 
-def crawl_race(s3_racelist_folder, target_date):
+def crawl_race(s3_racelist_folder, target_date, queue_count):
     L = racelist.get_logger("crawl_race")
-
-    L.debug(f"s3_racelist_folder={s3_racelist_folder}")
-    L.debug(f"target_date={target_date}")
+    L.info(f"start: s3_racelist_folder={s3_racelist_folder}, target_date={target_date}, queue_count={queue_count}")
 
     #
     L.info("# レース一覧を読み込む")
@@ -85,7 +83,7 @@ def crawl_race(s3_racelist_folder, target_date):
         df_racelist_not_crawl = racelist.extract_not_crawl_racelist(df_racelist, crawl_queue, datetime.now())
 
         for race_item in df_racelist_not_crawl.to_dict(orient="records"):
-            if len(crawl_queue) < 5:
+            if len(crawl_queue) < queue_count:
                 # サブプロセスでクロールを起動して、キューに追加する
                 proc = racelist.crawl_race_subprocess(race_item, f"before_{race_item['diff_minutes']}minutes")
                 race_item["proc"] = proc
@@ -120,13 +118,19 @@ def crawl_race(s3_racelist_folder, target_date):
             L.debug(f"キュー: {list(crawl_queue.keys())}")
 
         #
-        L.info("# 全レースのクロールが終了した場合、ループを終了する")
+        # 全レースのクロールが終了した場合、ループを終了する
         #
 
-        if len(df_racelist) == len(df_racelist.dropna()):
-            break
+        df_not_crawled_racelist = df_racelist[df_racelist["crawl_datetime"].isnull()]
 
-        time.sleep(1)
+        if len(df_not_crawled_racelist) == 0:
+            L.info("# 全レースをクロールしたので、終了する")
+            break
+        else:
+            L.debug(f"残レース数={len(df_not_crawled_racelist)}")
+            L.debug(f"キュー: {list(crawl_queue.keys())}")
+
+            time.sleep(1)
 
 
 if __name__ == "__main__":
@@ -145,8 +149,9 @@ if __name__ == "__main__":
     elif args.task == "crawl_race":
         s3_racelist_folder = os.environ["AWS_S3_RACELIST_FOLDER"]
         target_date = datetime.strptime(os.environ["TARGET_DATE"], "%Y-%m-%d")
+        queue_count = int(os.environ["CRAWL_QUEUE_COUNT"])
 
-        crawl_race(s3_racelist_folder, target_date)
+        crawl_race(s3_racelist_folder, target_date, queue_count)
 
     else:
         parser.print_help()
