@@ -4,7 +4,7 @@ from scrapy.contracts import Contract
 from scrapy.exceptions import ContractFail
 from scrapy.http import Request
 
-from boatrace_crawler.items import OddsItem, RaceIndexItem, RaceProgramBracketItem, RaceProgramBracketResultsItem, RaceProgramItem, RaceResultPayoffItem, RaceResultStartTimeItem, RaceResultTimeItem, RacerItem
+from boatrace_crawler.items import OddsItem, RaceBeforeBracketItem, RaceBeforeStartItem, RaceBeforeWeatherItem, RaceIndexItem, RaceProgramBracketItem, RaceProgramBracketResultsItem, RaceProgramItem, RaceResultPayoffItem, RaceResultStartTimeItem, RaceResultTimeItem, RaceResultWeatherItem, RacerItem
 
 
 class CalendarContract(Contract):
@@ -174,13 +174,14 @@ class RaceProgramContract(Contract):
         assert requests[2].url == "https://www.boatrace.jp/owpc/pc/race/odds2tf?rno=5&jcd=01&hd=20230817"
         assert requests[3].url == "https://www.boatrace.jp/owpc/pc/race/oddsk?rno=5&jcd=01&hd=20230817"
         assert requests[4].url == "https://www.boatrace.jp/owpc/pc/race/oddstf?rno=5&jcd=01&hd=20230817"
-        assert requests[5].url == "https://www.boatrace.jp/owpc/pc/race/raceresult?rno=5&jcd=01&hd=20230817"
-        assert requests[6].url == "https://www.boatrace.jp/owpc/pc/data/racersearch/profile?toban=4887"
-        assert requests[7].url == "https://www.boatrace.jp/owpc/pc/data/racersearch/profile?toban=4305"
-        assert requests[8].url == "https://www.boatrace.jp/owpc/pc/data/racersearch/profile?toban=5133"
-        assert requests[9].url == "https://www.boatrace.jp/owpc/pc/data/racersearch/profile?toban=4916"
-        assert requests[10].url == "https://www.boatrace.jp/owpc/pc/data/racersearch/profile?toban=3414"
-        assert requests[11].url == "https://www.boatrace.jp/owpc/pc/data/racersearch/profile?toban=5132"
+        assert requests[5].url == "https://www.boatrace.jp/owpc/pc/race/beforeinfo?rno=5&jcd=01&hd=20230817"
+        assert requests[6].url == "https://www.boatrace.jp/owpc/pc/race/raceresult?rno=5&jcd=01&hd=20230817"
+        assert requests[7].url == "https://www.boatrace.jp/owpc/pc/data/racersearch/profile?toban=4887"
+        assert requests[8].url == "https://www.boatrace.jp/owpc/pc/data/racersearch/profile?toban=4305"
+        assert requests[9].url == "https://www.boatrace.jp/owpc/pc/data/racersearch/profile?toban=5133"
+        assert requests[10].url == "https://www.boatrace.jp/owpc/pc/data/racersearch/profile?toban=4916"
+        assert requests[11].url == "https://www.boatrace.jp/owpc/pc/data/racersearch/profile?toban=3414"
+        assert requests[12].url == "https://www.boatrace.jp/owpc/pc/data/racersearch/profile?toban=5132"
 
 
 class Odds3tContract(Contract):
@@ -631,6 +632,83 @@ class RaceResultContract(Contract):
         assert i["favorite"] == ["\xa0"]
         assert i["payoff"] == ["¥410"]
         assert i["url"] == ["https://www.boatrace.jp/owpc/pc/race/raceresult?rno=5&jcd=01&hd=20230817#payoff"]
+
+        # 水面気象情報
+        items = list(filter(lambda o: isinstance(o, RaceResultWeatherItem), output))
+
+        assert len(items) == 1
+
+        i = items[0]
+        assert i['url'] == ['https://www.boatrace.jp/owpc/pc/race/raceresult?rno=5&jcd=01&hd=20230817#weather']
+        assert i['direction'] == ['weather1_bodyUnitImage is-direction14 is-type1__3rdadd']
+        assert i['temperature'] == ['32.0℃\n                              ']
+        assert i['weather'] == ['晴\n                              ']
+        assert i['wind_speed'] == ['2m\n                              ']
+        assert i['wind_direction'] == ['weather1_bodyUnitImage is-wind8']
+        assert i['water_temperature'] == ['27.0℃\n                              ']
+        assert i['wave_height'] == ['1cm\n                              ']
+
+
+class RaceBeforeContract(Contract):
+    name = "race_before_contract"
+
+    def post_process(self, output):
+        #
+        # Check items
+        #
+
+        # 展示タイム
+        items = list(filter(lambda o: isinstance(o, RaceBeforeBracketItem), output))
+
+        assert len(items) == 6
+
+        i = items[0]
+        assert i['url'] == ['https://www.boatrace.jp/owpc/pc/race/beforeinfo?rno=3&jcd=08&hd=20230104#bracket']
+        assert i['bracket_number'] == ['1']
+        assert i['racer_href'] == ['/owpc/pc/data/racersearch/profile?toban=4308']
+        assert i['weight'] == ['52.0kg']
+        assert i['weight_adjust'] == ['0.0']
+        assert i['time'] == ['6.75']
+        assert i['tilt'] == ['-0.5']
+
+        i = items[5]
+        assert i['url'] == ['https://www.boatrace.jp/owpc/pc/race/beforeinfo?rno=3&jcd=08&hd=20230104#bracket']
+        assert i['bracket_number'] == ['6']
+        assert i['racer_href'] == ['/owpc/pc/data/racersearch/profile?toban=3934']
+        assert i['weight'] == ['52.0kg']
+        assert i['weight_adjust'] == ['0.0']
+        assert i['time'] == ['6.81']
+        assert i['tilt'] == ['0.0']
+
+        # スタート展示
+        items = list(filter(lambda o: isinstance(o, RaceBeforeStartItem), output))
+
+        assert len(items) == 6
+
+        i = items[0]
+        assert i['url'] == ['https://www.boatrace.jp/owpc/pc/race/beforeinfo?rno=3&jcd=08&hd=20230104#start']
+        assert i['bracket_number'] == ['1']
+        assert i['start_time'] == ['.03']
+
+        i = items[5]
+        assert i['url'] == ['https://www.boatrace.jp/owpc/pc/race/beforeinfo?rno=3&jcd=08&hd=20230104#start']
+        assert i['bracket_number'] == ['5']
+        assert i['start_time'] == ['.07']
+
+        # 水面気象情報
+        items = list(filter(lambda o: isinstance(o, RaceBeforeWeatherItem), output))
+
+        assert len(items) == 1
+
+        i = items[0]
+        assert i['url'] == ['https://www.boatrace.jp/owpc/pc/race/beforeinfo?rno=3&jcd=08&hd=20230104#weather']
+        assert i['direction'] == ['weather1_bodyUnitImage is-direction9']
+        assert i['temperature'] == ['7.0℃']
+        assert i['weather'] == ['曇り']
+        assert i['wind_speed'] == ['3m']
+        assert i['wind_direction'] == ['weather1_bodyUnitImage is-wind13']
+        assert i['water_temperature'] == ['8.0℃']
+        assert i['wave_height'] == ['2cm']
 
 
 class RacerProfileContract(Contract):
