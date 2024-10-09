@@ -90,8 +90,14 @@ class RaceResultStartTimeItem(Item):
 
 
 class RaceResultWeatherItem(Item):
-    # TODO: 必要なら、気象情報も収集する
-    pass
+    url = Field()
+    direction = Field()
+    temperature = Field()
+    weather = Field()
+    wind_speed = Field()
+    wind_direction = Field()
+    water_temperature = Field()
+    wave_height = Field()
 
 
 class RaceResultPayoffItem(Item):

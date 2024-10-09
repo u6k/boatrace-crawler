@@ -3,7 +3,7 @@ from urllib.parse import parse_qs, urlparse
 import scrapy
 from scrapy.loader import ItemLoader
 
-from boatrace_crawler.items import OddsItem, RaceBeforeBracketItem, RaceBeforeStartItem, RaceBeforeWeatherItem, RaceIndexItem, RaceProgramBracketItem, RaceProgramBracketResultsItem, RaceProgramItem, RaceResultPayoffItem, RaceResultStartTimeItem, RaceResultTimeItem, RacerItem
+from boatrace_crawler.items import OddsItem, RaceBeforeBracketItem, RaceBeforeStartItem, RaceBeforeWeatherItem, RaceIndexItem, RaceProgramBracketItem, RaceProgramBracketResultsItem, RaceProgramItem, RaceResultPayoffItem, RaceResultStartTimeItem, RaceResultTimeItem, RaceResultWeatherItem, RacerItem
 
 
 class BoatraceSpider(scrapy.Spider):
@@ -670,6 +670,25 @@ class BoatraceSpider(scrapy.Spider):
 
             self.logger.debug(f"#parse_race_result: payoff={item}")
             yield item
+
+        #
+        # 水面気象情報を構築する
+        #
+        loader = ItemLoader(item=RaceResultWeatherItem(), selector=response.xpath("//div[contains(@class, 'weather1_body')]"))
+
+        loader.add_value("url", response.url + "#weather")
+        loader.add_xpath("direction", "div[1]/p/@class")
+        loader.add_xpath("temperature", "div[1]/div/span[2]/text()")
+        loader.add_xpath("weather", "div[2]/div/span[2]/text()")
+        loader.add_xpath("wind_speed", "div[3]/div/span[2]/text()")
+        loader.add_xpath("wind_direction", "div[4]/p/@class")
+        loader.add_xpath("water_temperature", "div[5]/div/span[2]/text()")
+        loader.add_xpath("wave_height", "div[6]/div/span[2]/text()")
+
+        item = loader.load_item()
+
+        self.logger.debug(f"#parse_race_result: race_result_weather={item}")
+        yield item
 
     def parse_racer_profile(self, response):
         """Parse racer profile page.
