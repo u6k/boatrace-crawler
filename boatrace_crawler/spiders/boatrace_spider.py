@@ -185,7 +185,7 @@ class BoatraceSpider(scrapy.Spider):
 
         @url https://www.boatrace.jp/owpc/pc/race/racelist?rno=5&jcd=01&hd=20230817
         @returns items 49 49
-        @returns requests 12 12
+        @returns requests 13 13
         @race_program_contract
         """
         self.logger.info(f"#parse_race_program: start: response={response.url}")
@@ -537,8 +537,8 @@ class BoatraceSpider(scrapy.Spider):
     def parse_race_before(self, response):
         """Parse race before page.
 
-        @url https://boatrace.jp/owpc/pc/race/beforeinfo?rno=3&jcd=08&hd=20230104
-        @returns items 0 0
+        @url https://www.boatrace.jp/owpc/pc/race/beforeinfo?rno=3&jcd=08&hd=20230104
+        @returns items 13 13
         @returns requests 0 0
         @race_before_contract
         """
@@ -604,7 +604,7 @@ class BoatraceSpider(scrapy.Spider):
 
         @url https://www.boatrace.jp/owpc/pc/race/raceresult?rno=5&jcd=01&hd=20230817
         NOTE: レース中止 @url https://www.boatrace.jp/owpc/pc/race/raceresult?rno=12&jcd=24&hd=20221223
-        @returns items 22 22
+        @returns items 23 23
         @returns requests 0 0
         @race_result_contract
         """
