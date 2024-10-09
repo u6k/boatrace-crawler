@@ -3,7 +3,7 @@ from urllib.parse import parse_qs, urlparse
 import scrapy
 from scrapy.loader import ItemLoader
 
-from boatrace_crawler.items import OddsItem, RaceIndexItem, RaceProgramBracketItem, RaceProgramBracketResultsItem, RaceProgramItem, RaceResultPayoffItem, RaceResultStartTimeItem, RaceResultTimeItem, RacerItem
+from boatrace_crawler.items import OddsItem, RaceBeforeBracketItem, RaceBeforeStartItem, RaceBeforeWeatherItem, RaceIndexItem, RaceProgramBracketItem, RaceProgramBracketResultsItem, RaceProgramItem, RaceResultPayoffItem, RaceResultStartTimeItem, RaceResultTimeItem, RacerItem
 
 
 class BoatraceSpider(scrapy.Spider):
@@ -70,6 +70,10 @@ class BoatraceSpider(scrapy.Spider):
         elif url.startswith("https://www.boatrace.jp/owpc/pc/race/oddstf?"):
             self.logger.debug("#_follow: follow odds tf page")
             return scrapy.Request(url, callback=self.parse_odds_tf, meta=meta)
+
+        elif url.startswith("https://www.boatrace.jp/owpc/pc/race/beforeinfo?"):
+            self.logger.debug("#_follow: follow race before page")
+            return scrapy.Request(url, callback=self.parse_race_before, meta=meta)
 
         elif url.startswith("https://www.boatrace.jp/owpc/pc/race/raceresult?"):
             self.logger.debug("#_follow: follow race result page")
@@ -282,6 +286,11 @@ class BoatraceSpider(scrapy.Spider):
         odds_url = response.urljoin(f"/owpc/pc/race/oddstf?rno={race_program_qs['rno'][0]}&jcd={race_program_qs['jcd'][0]}&hd={race_program_qs['hd'][0]}")
         self.logger.debug(f"#parse_race_program: a={odds_url}")
         yield self._follow(odds_url)
+
+        # 直前情報
+        result_url = response.urljoin(f"/owpc/pc/race/beforeinfo?rno={race_program_qs['rno'][0]}&jcd={race_program_qs['jcd'][0]}&hd={race_program_qs['hd'][0]}")
+        self.logger.debug(f"#parse_race_program: a={result_url}")
+        yield self._follow(result_url)
 
         # 結果
         result_url = response.urljoin(f"/owpc/pc/race/raceresult?rno={race_program_qs['rno'][0]}&jcd={race_program_qs['jcd'][0]}&hd={race_program_qs['hd'][0]}")
@@ -524,6 +533,71 @@ class BoatraceSpider(scrapy.Spider):
 
             self.logger.debug(f"#parse_odds_tf: odds={item}")
             yield item
+
+    def parse_race_before(self, response):
+        """Parse race before page.
+
+        @url https://boatrace.jp/owpc/pc/race/beforeinfo?rno=3&jcd=08&hd=20230104
+        @returns items 0 0
+        @returns requests 0 0
+        @race_before_contract
+        """
+        self.logger.info(f"#parse_race_before: start: response={response.url}")
+
+        #
+        # 展示タイムを構築する
+        #
+        for tbody in response.xpath("//table[@class='is-w748']/tbody"):
+            loader = ItemLoader(item=RaceBeforeBracketItem(), selector=tbody)
+
+            loader.add_value("url", response.url + "#bracket")
+            loader.add_xpath("bracket_number", "tr[1]/td[1]/text()")
+            loader.add_xpath("racer_href", "tr[1]/td[2]/a/@href")
+            loader.add_xpath("weight", "tr[1]/td[4]/text()")
+            loader.add_xpath("weight_adjust", "tr[3]/td[1]/text()")
+            loader.add_xpath("time", "tr[1]/td[5]/text()")
+            loader.add_xpath("tilt", "tr[1]/td[6]/text()")
+            # NOTE: 使わない loader.add_xpath("propeller", "tr[1]/td[7]/text()")
+            # NOTE: 使わない loader.add_xpath("parts_replacement", "tr[1]/td[7]/text()")
+
+            item = loader.load_item()
+
+            self.logger.debug(f"#parse_race_before: race_before_bracket={item}")
+            yield item
+
+        #
+        # スタート展示を構築する
+        #
+        for tr in response.xpath("//table[@class='is-w238']/tbody/tr"):
+            loader = ItemLoader(item=RaceBeforeStartItem(), selector=tr)
+
+            loader.add_value("url", response.url + "#start")
+            loader.add_xpath("bracket_number", "td/div/span[1]/text()")
+            loader.add_xpath("start_time", "td/div/span[3]/text()")
+
+            item = loader.load_item()
+
+            self.logger.debug(f"#parse_race_before: race_before_start={item}")
+            yield item
+
+        #
+        # 水面気象情報を構築する
+        #
+        loader = ItemLoader(item=RaceBeforeWeatherItem(), selector=response.xpath("//div[@class='weather1_body']"))
+
+        loader.add_value("url", response.url + "#weather")
+        loader.add_xpath("direction", "div[1]/p/@class")
+        loader.add_xpath("temperature", "div[1]/div/span[2]/text()")
+        loader.add_xpath("weather", "div[2]/div/span[2]/text()")
+        loader.add_xpath("wind_speed", "div[3]/div/span[2]/text()")
+        loader.add_xpath("wind_direction", "div[4]/p/@class")
+        loader.add_xpath("water_temperature", "div[5]/div/span[2]/text()")
+        loader.add_xpath("wave_height", "div[6]/div/span[2]/text()")
+
+        item = loader.load_item()
+
+        self.logger.debug(f"#parse_race_before: race_before_weather={item}")
+        yield item
 
     def parse_race_result(self, response):
         """Parse race result page.

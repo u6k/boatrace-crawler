@@ -54,6 +54,35 @@ class RaceResultTimeItem(Item):
     result_time = Field()
 
 
+class RaceBeforeBracketItem(Item):
+    url = Field()
+    bracket_number = Field()
+    racer_href = Field()
+    weight = Field()
+    weight_adjust = Field()
+    time = Field()
+    tilt = Field()
+    propeller = Field()
+    parts_replacement = Field()
+
+
+class RaceBeforeStartItem(Item):
+    url = Field()
+    bracket_number = Field()
+    start_time = Field()
+
+
+class RaceBeforeWeatherItem(Item):
+    url = Field()
+    direction = Field()
+    temperature = Field()
+    weather = Field()
+    wind_speed = Field()
+    wind_direction = Field()
+    water_temperature = Field()
+    wave_height = Field()
+
+
 class RaceResultStartTimeItem(Item):
     url = Field()
     bracket_number = Field()
