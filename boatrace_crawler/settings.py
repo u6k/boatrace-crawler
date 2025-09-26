@@ -4,7 +4,6 @@ from distutils.util import strtobool
 
 BOT_NAME = "boatrace_crawler"
 USER_AGENT = os.environ.get("USER_AGENT", "boatrace_crawler/1.0 (+https://github.com/u6k/boatrace-crawler)")
-CRAWL_HTTP_PROXY = os.environ.get("CRAWL_HTTP_PROXY")
 
 SPIDER_MODULES = ["boatrace_crawler.spiders"]
 NEWSPIDER_MODULE = "boatrace_crawler.spiders"

@@ -30,8 +30,6 @@ class BoatraceSpider(scrapy.Spider):
 
         # Setting http proxy
         meta = {}
-        if self.settings["CRAWL_HTTP_PROXY"]:
-            meta["proxy"] = self.settings["CRAWL_HTTP_PROXY"]
         self.logger.debug(f"#_follow: start: meta={meta}")
 
         # Build request

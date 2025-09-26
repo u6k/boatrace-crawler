@@ -64,16 +64,21 @@ Linuxに直接セットアップする場合、`Dockerfile`を参照すること
 
 ## Usage
 
-シェルを起動する。
+クローラーを起動する。
 
 ```bash
-docker compose run app bash
+docker compose up
 ```
 
-poeコマンドを実行する。例えば、クロールを実行する。
+RabbitMQからメッセージを受信してクロールを開始する。MQに投入するメッセージは以下の形式。
 
-```bash
-docker compose run app poe crawl
+```
+{
+"start_url": "https://www.boatrace.jp/owpc/pc/race/index?hd=20250926",
+"AWS_S3_FEED_URL": "s3://boatrace/feed/calendar/calendar_20250926.json",
+"RECACHE_RACE": "True",
+"RECACHE_DATA": "False"
+}
 ```
 
 ## Other

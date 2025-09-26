@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "boatrace-crawler"
-version = "1.5.0"
+version = "1.6.0"
 description = "競艇データをクロールする"
 authors = ["u6k <u6k.apps@gmail.com>"]
 license = "MIT License"
@@ -12,15 +12,14 @@ python = "^3.9"
 scrapy = "^2.10.0"
 boto3 = "^1.28.28"
 joblib = "^1.3.2"
-pandas = "^2.1.3"
-poethepoet = "^0.22.1"
-
+pika = "^1.3.2"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.12.0"
 flake8 = "^6.0.0"
 pyproject-flake8 = "^6.0.0.post1"
 autopep8 = "^2.0.4"
+poethepoet = "^0.22.1"
 
 [build-system]
 requires = ["poetry-core"]
@@ -38,11 +37,7 @@ profile = "black"
 line_length = 1000
 
 [tool.poe.tasks]
-lint = "pflake8 ./boatrace_crawler/ ./tests/"
-fix = [{cmd="autopep8 -ivr ./boatrace_crawler/ ./tests/"}, {cmd="isort ./boatrace_crawler/ ./tests/"}]
-test = {cmd="bin/scrapy_proxy.sh check boatrace_spider -L DEBUG"}
-test_pastodds = {cmd="bin/scrapy_proxy.sh check orangebuoy_spider -L DEBUG"}
-crawl = {cmd="bin/scrapy_proxy.sh crawl boatrace_spider"}
-crawl_pastodds = {cmd="bin/scrapy_proxy.sh crawl orangebuoy_spider"}
-create_racelist = "python boatrace_crawler/main.py --task create_racelist"
-crawl_race = "python boatrace_crawler/main.py --task crawl_race"
+lint = "pflake8 ./boatrace_crawler/ ./boatrace_mq/ ./tests/"
+fix = [{cmd="autopep8 -ivr ./boatrace_crawler/ ./boatrace_mq/ ./tests/"}, {cmd="isort ./boatrace_crawler/ ./boatrace_mq/ ./tests/"}]
+test = {cmd="scrapy check boatrace_spider -L DEBUG"}
+crawl = {cmd="scrapy crawl boatrace_spider -L DEBUG"}
