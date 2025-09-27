@@ -26,8 +26,25 @@ def crawl_process(body):
             crawl_env[k] = v
 
         # クロール用プロセスを開始する
-        result = subprocess.run(["scrapy", "crawl", "boatrace_spider", "-a", f"start_url={start_url}"], env=crawl_env)
-        L.info(f"crawl finish: {result.returncode=}")
+        args = ["scrapy", "crawl", "boatrace_spider", "-a", f"start_url={start_url}"]
+        L.debug(f"{args=}")
+
+        proc = subprocess.Popen(
+            args,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            env=crawl_env,
+        )
+        L.debug("subprocess starting")
+
+        while True:
+            output = proc.stdout.readline().decode("utf8").rstrip()
+            if not output and proc.poll() is not None:
+                break
+
+            L.debug(output)
+
+        L.info(f"crawl finish: {proc.returncode=}")
     except:  # noqa
         L.exception("crawl_process: error")
 
