@@ -3,6 +3,7 @@ from scrapy import Field, Item
 
 class RaceIndexItem(Item):
     url = Field()
+    timestamp = Field()
     place_id = Field()
     place_name = Field()
     race_grade = Field()
@@ -12,12 +13,14 @@ class RaceIndexItem(Item):
 
 class RaceProgramItem(Item):
     url = Field()
+    timestamp = Field()
     start_time = Field()
     course_length = Field()
 
 
 class RaceProgramBracketItem(Item):
     url = Field()
+    timestamp = Field()
     bracket_number = Field()
     racer_data1 = Field()
     racer_data2 = Field()
@@ -30,6 +33,7 @@ class RaceProgramBracketItem(Item):
 
 class RaceProgramBracketResultsItem(Item):
     url = Field()
+    timestamp = Field()
     bracket_number = Field()
     run_number = Field()
     bracket_color = Field()
@@ -41,6 +45,7 @@ class RaceProgramBracketResultsItem(Item):
 
 class OddsItem(Item):
     url = Field()
+    timestamp = Field()
     bracket_number_1 = Field()
     bracket_number_2 = Field()
     bracket_number_3 = Field()
@@ -49,6 +54,7 @@ class OddsItem(Item):
 
 class RaceResultTimeItem(Item):
     url = Field()
+    timestamp = Field()
     result = Field()
     bracket_number = Field()
     result_time = Field()
@@ -56,6 +62,7 @@ class RaceResultTimeItem(Item):
 
 class RaceBeforeBracketItem(Item):
     url = Field()
+    timestamp = Field()
     bracket_number = Field()
     racer_href = Field()
     weight = Field()
@@ -68,12 +75,14 @@ class RaceBeforeBracketItem(Item):
 
 class RaceBeforeStartItem(Item):
     url = Field()
+    timestamp = Field()
     bracket_number = Field()
     start_time = Field()
 
 
 class RaceBeforeWeatherItem(Item):
     url = Field()
+    timestamp = Field()
     direction = Field()
     temperature = Field()
     weather = Field()
@@ -85,12 +94,14 @@ class RaceBeforeWeatherItem(Item):
 
 class RaceResultStartTimeItem(Item):
     url = Field()
+    timestamp = Field()
     bracket_number = Field()
     start_time = Field()
 
 
 class RaceResultWeatherItem(Item):
     url = Field()
+    timestamp = Field()
     direction = Field()
     temperature = Field()
     weather = Field()
@@ -102,6 +113,7 @@ class RaceResultWeatherItem(Item):
 
 class RaceResultPayoffItem(Item):
     url = Field()
+    timestamp = Field()
     bet_type = Field()
     bracket_number = Field()
     payoff = Field()
@@ -110,6 +122,7 @@ class RaceResultPayoffItem(Item):
 
 class RacerItem(Item):
     url = Field()
+    timestamp = Field()
     name = Field()
     name_kana = Field()
     racer_id = Field()
