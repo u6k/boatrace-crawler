@@ -1,3 +1,4 @@
+from datetime import datetime
 from urllib.parse import parse_qs, urlparse
 
 import scrapy
@@ -139,6 +140,7 @@ class BoatraceSpider(scrapy.Spider):
         # レースインデックスを構築する
         loader = ItemLoader(item=RaceIndexItem(), response=response)
         loader.add_value("url", response.url)
+        loader.add_value("timestamp", datetime.now())
 
         race_index_url = urlparse(response.url)
         race_index_qs = parse_qs(race_index_url.query)
@@ -196,6 +198,7 @@ class BoatraceSpider(scrapy.Spider):
         #
         loader = ItemLoader(item=RaceProgramItem(), response=response)
         loader.add_value("url", response.url + "#info")
+        loader.add_value("timestamp", datetime.now())
         loader.add_xpath("course_length", "translate(normalize-space(//h3[@class='title16_titleDetail__add2020']), ' ', '')")
 
         # 出走時刻を抽出する
@@ -223,6 +226,7 @@ class BoatraceSpider(scrapy.Spider):
             loader = ItemLoader(item=RaceProgramBracketItem(), selector=tbody)
 
             loader.add_value("url", response.url + "#bracket")
+            loader.add_value("timestamp", datetime.now())
             loader.add_xpath("bracket_number", "tr[1]/td[1]/text()")
             loader.add_xpath("racer_data1", "translate(normalize-space(tr[1]/td[3]/div[1]), ' ', '')")
             loader.add_xpath("racer_data2", "translate(normalize-space(tr[1]/td[3]/div[3]), ' ', '/')")
@@ -243,6 +247,7 @@ class BoatraceSpider(scrapy.Spider):
             for i in range(14):
                 loader = ItemLoader(item=RaceProgramBracketResultsItem(), selector=tbody)
                 loader.add_value("url", response.url + "#bracket_result")
+                loader.add_value("timestamp", datetime.now())
                 loader.add_xpath("bracket_number", "tr[1]/td[1]/text()")
                 loader.add_value("run_number", i)
                 loader.add_xpath("bracket_color", f"tr[1]/td[{i+10}]/@class")
@@ -337,6 +342,7 @@ class BoatraceSpider(scrapy.Spider):
 
                     loader = ItemLoader(item=OddsItem(), selector=None)
                     loader.add_value("url", response.url)
+                    loader.add_value("timestamp", datetime.now())
                     loader.add_value("bracket_number_1", bracket_number_1)
                     loader.add_value("bracket_number_2", bracket_number_2)
                     loader.add_value("bracket_number_3", bracket_number_3)
@@ -370,6 +376,7 @@ class BoatraceSpider(scrapy.Spider):
 
             loader = ItemLoader(item=OddsItem(), selector=None)
             loader.add_value("url", response.url)
+            loader.add_value("timestamp", datetime.now())
             loader.add_value("bracket_number_1", bracket_number_1)
             loader.add_value("bracket_number_2", bracket_number_2)
             loader.add_value("bracket_number_3", bracket_number_3)
@@ -424,6 +431,7 @@ class BoatraceSpider(scrapy.Spider):
             for j in range(5):
                 loader = ItemLoader(item=OddsItem(), selector=table)
                 loader.add_value("url", response.url + "#odds2t")
+                loader.add_value("timestamp", datetime.now())
                 loader.add_xpath("bracket_number_1", f"thead/tr/th[{i*2+1}]/text()")
                 loader.add_xpath("bracket_number_2", f"tbody/tr[{j+1}]/td[{i*2+1}]/text()")
                 loader.add_xpath("odds", f"tbody/tr[{j+1}]/td[{i*2+2}]/text()")
@@ -440,6 +448,7 @@ class BoatraceSpider(scrapy.Spider):
             for j in range(5):
                 loader = ItemLoader(item=OddsItem(), selector=table)
                 loader.add_value("url", response.url + "#odds2f")
+                loader.add_value("timestamp", datetime.now())
                 loader.add_xpath("bracket_number_1", f"thead/tr/th[{i*2+1}]/text()")
                 loader.add_xpath("bracket_number_2", f"tbody/tr[{j+1}]/td[{i*2+1}]/text()")
                 loader.add_xpath("odds", f"tbody/tr[{j+1}]/td[{i*2+2}]/text()")
@@ -475,6 +484,7 @@ class BoatraceSpider(scrapy.Spider):
             for j in range(5):
                 loader = ItemLoader(item=OddsItem(), selector=table)
                 loader.add_value("url", response.url)
+                loader.add_value("timestamp", datetime.now())
                 loader.add_xpath("bracket_number_1", f"thead/tr/th[{i*2+1}]/text()")
                 loader.add_xpath("bracket_number_2", f"tbody/tr[{j+1}]/td[{i*2+1}]/text()")
                 loader.add_xpath("odds", f"tbody/tr[{j+1}]/td[{i*2+2}]/text()")
@@ -510,6 +520,7 @@ class BoatraceSpider(scrapy.Spider):
         for i in range(6):
             loader = ItemLoader(item=OddsItem(), selector=table)
             loader.add_value("url", response.url + "#oddst")
+            loader.add_value("timestamp", datetime.now())
             loader.add_xpath("bracket_number_1", f"tbody[{i+1}]/tr/td[1]/text()")
             loader.add_xpath("odds", f"tbody[{i+1}]/tr/td[3]/text()")
 
@@ -524,6 +535,7 @@ class BoatraceSpider(scrapy.Spider):
         for i in range(6):
             loader = ItemLoader(item=OddsItem(), selector=table)
             loader.add_value("url", response.url + "#oddsf")
+            loader.add_value("timestamp", datetime.now())
             loader.add_xpath("bracket_number_1", f"tbody[{i+1}]/tr/td[1]/text()")
             loader.add_xpath("odds", f"tbody[{i+1}]/tr/td[3]/text()")
 
@@ -549,6 +561,7 @@ class BoatraceSpider(scrapy.Spider):
             loader = ItemLoader(item=RaceBeforeBracketItem(), selector=tbody)
 
             loader.add_value("url", response.url + "#bracket")
+            loader.add_value("timestamp", datetime.now())
             loader.add_xpath("bracket_number", "tr[1]/td[1]/text()")
             loader.add_xpath("racer_href", "tr[1]/td[2]/a/@href")
             loader.add_xpath("weight", "tr[1]/td[4]/text()")
@@ -570,6 +583,7 @@ class BoatraceSpider(scrapy.Spider):
             loader = ItemLoader(item=RaceBeforeStartItem(), selector=tr)
 
             loader.add_value("url", response.url + "#start")
+            loader.add_value("timestamp", datetime.now())
             loader.add_xpath("bracket_number", "td/div/span[1]/text()")
             loader.add_xpath("start_time", "td/div/span[3]/text()")
 
@@ -584,6 +598,7 @@ class BoatraceSpider(scrapy.Spider):
         loader = ItemLoader(item=RaceBeforeWeatherItem(), selector=response.xpath("//div[@class='weather1_body']"))
 
         loader.add_value("url", response.url + "#weather")
+        loader.add_value("timestamp", datetime.now())
         loader.add_xpath("direction", "div[1]/p/@class")
         loader.add_xpath("temperature", "div[1]/div/span[2]/text()")
         loader.add_xpath("weather", "div[2]/div/span/text()")
@@ -619,6 +634,7 @@ class BoatraceSpider(scrapy.Spider):
         for tbody in tables[0].xpath("tbody"):
             loader = ItemLoader(item=RaceResultTimeItem(), selector=tbody)
             loader.add_value("url", response.url + "#result")
+            loader.add_value("timestamp", datetime.now())
             loader.add_xpath("result", "tr/td[1]/text()")
             loader.add_xpath("bracket_number", "tr/td[2]/text()")
             loader.add_xpath("result_time", "tr/td[4]/text()")
@@ -632,6 +648,7 @@ class BoatraceSpider(scrapy.Spider):
         for tr in tables[1].xpath("tbody/tr"):
             loader = ItemLoader(item=RaceResultStartTimeItem(), selector=tr)
             loader.add_value("url", response.url + "#start")
+            loader.add_value("timestamp", datetime.now())
             loader.add_xpath("bracket_number", "td/div/span[1]/text()")
             loader.add_xpath("start_time", "translate(normalize-space(td/div/span[3]/span), ' ', '')")
 
@@ -646,6 +663,7 @@ class BoatraceSpider(scrapy.Spider):
         for tr in tables[2].xpath("tbody/tr"):
             loader = ItemLoader(item=RaceResultPayoffItem(), selector=tr)
             loader.add_value("url", response.url + "#payoff")
+            loader.add_value("timestamp", datetime.now())
 
             if len(tr.xpath("td")) == 4:
                 bet_type = tr.xpath("td[1]/text()").get()
@@ -675,6 +693,7 @@ class BoatraceSpider(scrapy.Spider):
         loader = ItemLoader(item=RaceResultWeatherItem(), selector=response.xpath("//div[contains(@class, 'weather1_body')]"))
 
         loader.add_value("url", response.url + "#weather")
+        loader.add_value("timestamp", datetime.now())
         loader.add_xpath("direction", "div[1]/p/@class")
         loader.add_xpath("temperature", "div[1]/div/span[2]/text()")
         loader.add_xpath("weather", "div[2]/div/span/text()")
@@ -700,6 +719,7 @@ class BoatraceSpider(scrapy.Spider):
 
         loader = ItemLoader(item=RacerItem(), selector=response)
         loader.add_value("url", response.url)
+        loader.add_value("timestamp", datetime.now())
         loader.add_xpath("name", "//p[@class='racer1_bodyName']/text()")
         loader.add_xpath("name_kana", "//p[@class='racer1_bodyKana']/text()")
         loader.add_xpath("racer_id", "//dl[@class='list3']/dd[1]/text()")
