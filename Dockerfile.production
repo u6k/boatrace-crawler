@@ -15,4 +15,4 @@ WORKDIR /var/myapp
 COPY . /var/myapp
 RUN poetry install --no-root --without dev
 
-CMD ["poetry", "run", "python", "./boatrace_mq/main.py"]
+CMD ["poetry", "run", "python", "-m", "boatrace_crawler"]

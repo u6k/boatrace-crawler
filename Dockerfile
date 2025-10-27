@@ -16,4 +16,4 @@ VOLUME /var/myapp
 COPY pyproject.toml poetry.lock ./
 RUN poetry install --no-root
 
-CMD ["poetry", "run", "python", "./boatrace_mq/main.py"]
+CMD ["poetry", "run", "python", "-m", "boatrace_crawler"]
