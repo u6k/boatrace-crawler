@@ -10,11 +10,12 @@ import pika
 logging.config.fileConfig("logging.conf")
 L = logging.getLogger("boatrace.mq")
 
-executor = ThreadPoolExecutor(max_workers=1)
+executor = ThreadPoolExecutor(max_workers=None)
 
 
-def crawl_process(body):
-    L.info(f"crawl_process: {body=}")
+def crawl_process(body, delivery_tag):
+    logger = logging.getLogger(f"boatrace.mq.{delivery_tag}")
+    logger.info(f"crawl_process: {body=}")
 
     try:
         msg = json.loads(body.decode())
@@ -27,7 +28,7 @@ def crawl_process(body):
 
         # クロール用プロセスを開始する
         args = ["scrapy", "crawl", "boatrace_spider", "-a", f"start_url={start_url}"]
-        L.debug(f"{args=}")
+        logger.debug(f"{args=}")
 
         proc = subprocess.Popen(
             args,
@@ -35,39 +36,28 @@ def crawl_process(body):
             stderr=subprocess.STDOUT,
             env=crawl_env,
         )
-        L.debug("subprocess starting")
+        logger.debug("subprocess starting")
 
         while True:
             output = proc.stdout.readline().decode("utf8").rstrip()
             if not output and proc.poll() is not None:
                 break
 
-            L.debug(output)
+            logger.debug(output)
 
-        L.info(f"crawl finish: {proc.returncode=}")
+        logger.info(f"crawl finish: {proc.returncode=}")
     except:  # noqa
-        L.exception("crawl_process: error")
-
-
-def ack_message(ch, delivery_tag):
-    L.info(f"ack_message: {delivery_tag=}")
-
-    try:
-        ch.basic_ack(delivery_tag)
-
-        L.info("acked")
-    except:  # noqa
-        L.exception("acked: error")
+        logger.exception("crawl_process: error")
 
 
 def mq_callback(ch, method, properties, body):
     L.info(f"process: {method=}, {body=}")
 
     try:
-        future = executor.submit(crawl_process, body)
+        executor.submit(crawl_process, body, method.delivery_tag)
 
-        def ack_callback(f): return mq_conn.add_callback_threadsafe(lambda: ack_message(ch, method.delivery_tag))
-        future.add_done_callback(ack_callback)
+        ch.basic_ack(method.delivery_tag)
+        L.info("acked")
     except:  # noqa
         L.exception("process: error")
 
