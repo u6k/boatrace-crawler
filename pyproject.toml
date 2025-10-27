@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "boatrace-crawler"
-version = "1.8.0-dev"
+version = "1.7.1"
 description = "競艇データをクロールする"
 authors = ["u6k <u6k.apps@gmail.com>"]
 license = "MIT License"
