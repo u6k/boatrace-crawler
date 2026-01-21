@@ -29,7 +29,7 @@ class S3Client:
         if not self.s3_bucket_obj.creation_date:
             self.s3_bucket_obj.create()
 
-    def get_json_gz(self, key):
+    def get(self, key):
         data_bytes = self.get_bytes(key)
 
         if data_bytes is None:
@@ -56,7 +56,7 @@ class S3Client:
 
         return data_bytes
 
-    def put_json_gz(self, key, data):
+    def put(self, key, data):
         payload = json.dumps(data, ensure_ascii=False).encode("utf-8")
         compressed = gzip.compress(payload)
         self.s3_bucket_obj.Object(key).put(Body=compressed)
@@ -110,7 +110,7 @@ class S3CacheStorage:
         rpath = self._get_request_path(spider, request)
         spider.logger.debug(f"#retrieve_response: cache path={rpath}")
 
-        data = self.s3_client.get_json_gz(rpath + ".json.gz")
+        data = self.s3_client.get(rpath + ".json.gz")
         if data is None:
             spider.logger.debug("#retrieve_response: cache not found")
             return
@@ -147,7 +147,7 @@ class S3CacheStorage:
             },
         }
 
-        self.s3_client.put_json_gz(rpath + ".json.gz", data)
+        self.s3_client.put(rpath + ".json.gz", data)
 
     def _get_request_path(self, spider, request):
         key = self._fingerprinter.fingerprint(request).hex()
