@@ -6,8 +6,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     # Install Poetry
     curl -sSL https://install.python-poetry.org | python3 - && \
-    ln -s /root/.local/bin/poetry /usr/local/bin/ && \
-    poetry config virtualenvs.create false
+    ln -s /root/.local/bin/poetry /usr/local/bin/
 
 # Install poetry packages
 WORKDIR /var/myapp
