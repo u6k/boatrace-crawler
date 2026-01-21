@@ -4,11 +4,13 @@
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
 
+import base64
+import gzip
 import io
+import json
 from pathlib import Path
 
 import boto3
-import joblib
 from botocore.exceptions import ClientError
 from scrapy.http import Headers
 from scrapy.responsetypes import responsetypes
@@ -30,13 +32,16 @@ class S3Client:
     def get(self, key):
         data_bytes = self.get_bytes(key)
 
-        if data_bytes is not None:
-            with io.BytesIO(data_bytes) as b:
-                data = joblib.load(b)
-        else:
-            data = None
+        if data_bytes is None:
+            return None
 
-        return data
+        with io.BytesIO(data_bytes) as b:
+            try:
+                decompressed = gzip.decompress(b.getvalue())
+            except OSError as err:
+                raise ValueError(f"Failed to decompress gzip data for key={key}") from err
+
+        return json.loads(decompressed.decode("utf-8"))
 
     def get_bytes(self, key):
         s3_obj = self.s3_bucket_obj.Object(key)
@@ -52,9 +57,9 @@ class S3Client:
         return data_bytes
 
     def put(self, key, data):
-        with io.BytesIO() as b:
-            joblib.dump(data, b, compress=True)
-            self.s3_bucket_obj.Object(key).put(Body=b.getvalue())
+        payload = json.dumps(data, ensure_ascii=False).encode("utf-8")
+        compressed = gzip.compress(payload)
+        self.s3_bucket_obj.Object(key).put(Body=compressed)
 
     def put_bytes(self, key, data_bytes):
         self.s3_bucket_obj.Object(key).put(Body=data_bytes)
@@ -77,6 +82,18 @@ class S3CacheStorage:
     def close_spider(self, spider):
         pass
 
+    def _encode_bytes(self, value):
+        return base64.b64encode(value).decode("ascii")
+
+    def _decode_bytes(self, value):
+        return base64.b64decode(value.encode("ascii"))
+
+    def _encode_headers(self, headers):
+        return Headers(headers).to_unicode_dict()
+
+    def _decode_headers(self, headers):
+        return Headers(headers)
+
     def retrieve_response(self, spider, request):
         spider.logger.debug(f"#retrieve_response: start: url={request.url}")
 
@@ -93,15 +110,15 @@ class S3CacheStorage:
         rpath = self._get_request_path(spider, request)
         spider.logger.debug(f"#retrieve_response: cache path={rpath}")
 
-        data = self.s3_client.get(rpath + ".joblib")
+        data = self.s3_client.get(rpath + ".json.gz")
         if data is None:
             spider.logger.debug("#retrieve_response: cache not found")
             return
 
         url = data["response"]["url"]
         status = data["response"]["status"]
-        headers = Headers(data["response"]["headers"])
-        body = data["response"]["body"]
+        headers = self._decode_headers(data["response"]["headers"])
+        body = self._decode_bytes(data["response"]["body_b64"])
         respcls = responsetypes.from_args(headers=headers, url=url)
         response = respcls(url=url, headers=headers, status=status, body=body)
 
@@ -119,18 +136,18 @@ class S3CacheStorage:
             "request": {
                 "url": request.url,
                 "method": request.method,
-                "headers": request.headers,
-                "body": request.body,
+                "headers": self._encode_headers(request.headers),
+                "body_b64": self._encode_bytes(request.body),
             },
             "response": {
                 "url": response.url,
                 "status": response.status,
-                "headers": response.headers,
-                "body": response.body,
+                "headers": self._encode_headers(response.headers),
+                "body_b64": self._encode_bytes(response.body),
             },
         }
 
-        self.s3_client.put(rpath + ".joblib", data)
+        self.s3_client.put(rpath + ".json.gz", data)
 
     def _get_request_path(self, spider, request):
         key = self._fingerprinter.fingerprint(request).hex()
