@@ -11,7 +11,6 @@ import json
 from pathlib import Path
 
 import boto3
-import joblib
 from botocore.exceptions import ClientError
 from scrapy.http import Headers
 from scrapy.responsetypes import responsetypes
@@ -29,17 +28,6 @@ class S3Client:
         self.s3_bucket_obj = self.s3_client.Bucket(self.s3_bucket)
         if not self.s3_bucket_obj.creation_date:
             self.s3_bucket_obj.create()
-
-    def get_joblib(self, key):
-        data_bytes = self.get_bytes(key)
-
-        if data_bytes is not None:
-            with io.BytesIO(data_bytes) as b:
-                data = joblib.load(b)
-        else:
-            data = None
-
-        return data
 
     def get_json_gz(self, key):
         data_bytes = self.get_bytes(key)
@@ -67,11 +55,6 @@ class S3Client:
                 raise err
 
         return data_bytes
-
-    def put_joblib(self, key, data):
-        with io.BytesIO() as b:
-            joblib.dump(data, b, compress=True)
-            self.s3_bucket_obj.Object(key).put(Body=b.getvalue())
 
     def put_json_gz(self, key, data):
         payload = json.dumps(data, ensure_ascii=False).encode("utf-8")
@@ -129,20 +112,13 @@ class S3CacheStorage:
 
         data = self.s3_client.get_json_gz(rpath + ".json.gz")
         if data is None:
-            spider.logger.debug("#retrieve_response: json cache not found")
-            data = self.s3_client.get_joblib(rpath + ".joblib")
-        if data is None:
             spider.logger.debug("#retrieve_response: cache not found")
             return
 
         url = data["response"]["url"]
         status = data["response"]["status"]
-        if "body_b64" in data["response"]:
-            headers = self._decode_headers(data["response"]["headers"])
-            body = self._decode_bytes(data["response"]["body_b64"])
-        else:
-            headers = Headers(data["response"]["headers"])
-            body = data["response"]["body"]
+        headers = self._decode_headers(data["response"]["headers"])
+        body = self._decode_bytes(data["response"]["body_b64"])
         respcls = responsetypes.from_args(headers=headers, url=url)
         response = respcls(url=url, headers=headers, status=status, body=body)
 
